@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>La-Belle</title>
+  <style>
+    :root{
+      --bg:#f7f7f8; --fg:#0b0b0c; --muted:#6e6e73; --line:#e6e7eb; --line-strong:#d9dae0;
+      --card:#ffffff; --chip:#f2f3f5; --chip-text:#171717; --accent:#111111;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue";background:var(--bg);color:var(--fg);line-height:1.6;display:flex;flex-direction:column}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px;flex:1}
+    header{padding:22px 0;border-bottom:1px solid var(--line);margin-bottom:28px;position:sticky;top:0;backdrop-filter:saturate(1.2) blur(4px);z-index:5;background:rgba(247,247,248,.7)}
+    .header-content{display:flex;justify-content:space-between;align-items:center;gap:16px}
+    .logo{font-size:18px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+    .cart-btn,.custom-set-btn{background:var(--card);border:1px solid var(--line);padding:10px 16px;border-radius:999px;cursor:pointer;font-size:14px;transition:.25s;position:relative}
+    .cart-btn:hover,.custom-set-btn:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+    .cart-count{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}
+    .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px;margin:28px 0 64px}
+    .product-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;transition:.25s;cursor:pointer}
+    .product-card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+    .product-image{width:100%;aspect-ratio:3/4;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:44px;color:#888;object-fit:contain;margin-bottom:12px}
+    .product-brand{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+    .product-name{font-size:16px;font-weight:600;margin-bottom:6px}
+    .product-price-range{font-size:14px}
+
+    .modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,15,18,.55);backdrop-filter:blur(6px)}
+    .modal-content{background:var(--card);border:1px solid var(--line);margin:3% auto;border-radius:18px;width:min(980px,94%);max-height:90vh;overflow:auto}
+    .modal-header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+    .modal-title{font-size:18px;font-weight:600}
+    .close{background:transparent;border:none;color:var(--muted);font-size:26px;cursor:pointer;padding:6px}
+    .close:hover{color:var(--fg)}
+    .modal-body{padding:22px}
+    .detail-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:28px}
+    .detail-image{background:#fff;border:1px solid var(--line);border-radius:14px;display:grid;place-items:center;aspect-ratio:3/4;font-size:64px;color:#999;overflow:hidden}
+    .detail-image img{width:100%;height:100%;object-fit:contain}
+    .detail-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+    .detail-content{color:#333}
+    .volume-options{display:flex;flex-wrap:wrap;gap:10px}
+    .volume-option,.set-option{background:var(--chip);color:var(--chip-text);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap;transition:.2s}
+    .volume-option:hover,.set-option:hover{border-color:var(--line-strong)}
+    .volume-option.selected,.set-option.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .volume-price,.set-price{display:block;font-size:11px;opacity:.8}
+    .current-price{font-size:24px;font-weight:700;margin:18px 0}
+    .add-to-cart{width:100%;background:var(--accent);color:#fff;border:none;padding:14px 18px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s}
+    .add-to-cart:hover{transform:translateY(-1px);opacity:.95}
+
+    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+    .cart-item:last-child{border-bottom:none}
+    .cart-item-details{font-size:12px;color:var(--muted)}
+    .cart-item-price{font-weight:600}
+    .quantity-controls{display:flex;align-items:center;gap:12px}
+    .quantity-btn{background:var(--card);border:1px solid var(--line);width:32px;height:32px;border-radius:8px;cursor:pointer}
+
+    .total{text-align:center;padding-top:16px;border-top:1px solid var(--line)}
+    .total-price{font-size:22px;font-weight:700}
+    .share-btn{width:100%;background:var(--card);border:1px solid var(--line);padding:12px 16px;border-radius:12px;cursor:pointer;margin-top:14px}
+
+    /* Checkout form */
+    .checkout{margin-top:18px;border-top:1px dashed var(--line);padding-top:16px}
+    .checkout-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .checkout-grid .full{grid-column:1 / -1}
+    label{font-size:12px;color:var(--muted)}
+    input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:14px}
+    textarea{min-height:72px;resize:vertical}
+
+    /* skeleton */
+    .skeleton{display:grid;gap:16px}
+    .skeleton .row{height:260px;background:linear-gradient(90deg,#eee,#f6f6f6,#eee);background-size:200% 100%;animation:shimmer 1.2s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:0 0}}
+
+    /* Footer */
+    footer{border-top:1px solid var(--line);margin-top:40px;background:var(--card)}
+    .footer-inner{max-width:1200px;margin:0 auto;padding:24px 20px;display:grid;gap:14px}
+    .footer-top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+    .socials{display:flex;gap:10px}
+    .socials a{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--fg);font-size:14px}
+    .footer-links{display:flex;gap:16px;flex-wrap:wrap}
+    .footer-links a{color:var(--muted);text-decoration:none;font-size:14px}
+    .footer-bottom{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+    @media (max-width: 860px){
+      .detail-grid{grid-template-columns:1fr;gap:18px}
+      .modal-content{width:96%}
+      .checkout-grid{grid-template-columns:1fr}
+    }
+/* фиксируем итог снизу модалки и делаем фон непрозрачным */
+#cartModal .total{
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  z-index: 2147483646;
+}
+
+#cartModal .total-actions{
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px){
+  #cartModal .total-actions{ grid-template-columns: 1fr 1fr; }
+}
+
+/* кнопки */
+#cartModal .btn-primary,
+#cartModal .btn-secondary{
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; border-radius: 12px; font-weight: 600;
+  border: 1px solid var(--line); background: var(--card);
+  cursor: pointer;
+}
+#cartModal .btn-primary{
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="logo">La-Belle</div>
+        <div>
+          <button class="custom-set-btn" onclick="openCustomSetModal()">Создать сет</button>
+          <button class="cart-btn" onclick="openCart()">Корзина <span class="cart-count" id="cartCount">0</span></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="products-grid" id="productsGrid">
+      <div class="skeleton">
+        <div class="row"></div><div class="row"></div><div class="row"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно товара -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="productModalTitle">Детали товара</h2>
+        <button class="close" onclick="closeProductModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="productModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Модальное окно создания кастомного сета -->
+  <div id="customSetModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Создать сет</h2>
+        <button class="close" onclick="closeCustomSetModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="custom-set-section">
+          <div class="detail-title">Выберите парфюмы</div>
+          <div class="custom-set-grid" id="customSetGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
+          <div class="custom-set-controls" style="display:flex;align-items:center;gap:12px;margin-top:12px">
+            <label>Объем</label>
+            <select id="customSetVolume">
+              <option value="2">2мл</option>
+              <option value="5">5мл</option>
+              <option value="10" selected>10мл</option>
+            </select>
+            <label>Количество</label>
+            <input type="number" id="customSetCount" min="2" max="10" value="3" style="width: 70px;">
+            <button onclick="calculateCustomSet()">Рассчитать</button>
+          </div>
+          <div id="customSetPrice" class="current-price" style="margin-top: 12px;"></div>
+          <button class="add-to-cart" id="addCustomSetBtn" onclick="addCustomSetToCart()" style="display:none">Добавить в корзину</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно корзины -->
+  <div id="cartModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Корзина</h2>
+        <button class="close" onclick="closeCart()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="cartItems"></div>
+
+        <!-- Checkout form -->
+        <div class="checkout">
+          <div class="detail-title">Данные для доставки</div>
+          <div class="checkout-grid">
+            <div>
+              <label>Имя</label>
+              <input id="c_name" placeholder="Как к вам обращаться"/>
+            </div>
+            <div>
+              <label>Телефон</label>
+              <input id="c_phone" placeholder="+7 7XX XXX XX XX"/>
+            </div>
+            <div>
+              <label>Город</label>
+              <input id="c_city" placeholder="Город"/>
+            </div>
+            <div>
+              <label>Улица</label>
+              <input id="c_street" placeholder="Улица"/>
+            </div>
+            <div>
+              <label>Дом</label>
+              <input id="c_house" placeholder="Дом"/>
+            </div>
+            <div>
+              <label>Квартира</label>
+              <input id="c_flat" placeholder="Квартира"/>
+            </div>
+            <div class="full">
+              <label>Комментарий</label>
+              <textarea id="c_comment"
+                placeholder="Подъезд/этаж/код домофона и любые пожелания"
+                data-gramm="false" data-gramm_editor="false" gramm="false"
+                spellcheck="false"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="total">
+          <div class="total-price"><span id="totalPrice">0</span> ₸</div>
+          <div class="total-actions">
+            <button class="btn-secondary" onclick="shareCart()">Поделиться</button>
+            <button class="btn-primary"  onclick="submitOrder()">Оформить заказ</button>
+          </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- SheetJS нужен только если оставите downloadExcel():
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> -->
+
+  <script>
+    // ================== НАСТРОЙКИ (поменяйте под себя) ==================
+    // 1) Каталог: CSV (тот же Google Sheet, где товары)
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Jyrtv0BnD03CBCqCbfF1puSiAVTqG4p-MPSaXCYFOgM/export?format=csv&gid=1821735406";
+    // 2) Веб-хук Apps Script (из "Развертываний" → Web App URL)
+    const ORDER_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxbXh6Jt7aIq6DQGfwusTFEEVUUrpT8VlyDzav0jxMnc8_tqvwvnL4twSeqpTgEG51s/exec";
+    // 3) Токен безопасности (должен совпадать с AUTH_TOKEN в Apps Script)
+    const SHEET_TOKEN = "CHANGE_ME_SECRET";
+    // 4) Номер WhatsApp для авто-открытия диалога (без "+")
+    const WHATSAPP_PHONE = "7701XXXXXXX";
+    // (опционально) Telegram username или бот
+    const TELEGRAM_BOT_OR_USERNAME = ""; // если пусто — t.me/share
+
+    // ================== Глобальное состояние ==================
+    let products = [];
+    let cart = [];
+    let selectedOptions = {};
+    let customSetSelection = [];
+
+    // ================== Утилиты ==================
+    function rub(n){ try{return Number(n).toLocaleString('ru-RU')}catch(e){return n} }
+    function slug(s){ return (s||"").toLowerCase().replace(/['’]/g,"").replace(/[^a-z0-9а-яё\s-]/gi," ").replace(/\s+/g," ").trim().replace(/\s/g,"_"); }
+    function imagePathFor(p){ return `images/${slug(p.brand)}_${slug(p.name)}.jpg`; }
+    function toInt(val){ const d=(val||"").toString().replace(/[^\d]/g,""); return d?parseInt(d,10):null; }
+    function normalizeDrive(u){
+      if(!u) return "";
+      try{
+        const url = new URL(u);
+        if (url.hostname === "drive.google.com"){
+          const m = url.pathname.match(/\/file\/d\/([^/]+)/);
+          if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+        }
+      }catch(e){}
+      return u;
+    }
+
+    // Чекаут значения
+    function getCheckout(){
+      const get = id => (document.getElementById(id)?.value || "").trim();
+      return {
+        name: get('c_name'),
+        phone: get('c_phone'),
+        city: get('c_city'),
+        street: get('c_street'),
+        house: get('c_house'),
+        flat: get('c_flat'),
+        comment: get('c_comment'),
+      };
+    }
+    function formatAddress(ch){
+      const parts = [];
+      if (ch.city) parts.push(`г. ${ch.city}`);
+      if (ch.street) parts.push(`ул. ${ch.street}`);
+      if (ch.house) parts.push(`д. ${ch.house}`);
+      if (ch.flat) parts.push(`кв. ${ch.flat}`);
+      return parts.join(', ');
+    }
+    function validateBeforeSend(){
+      if (cart.length === 0) { alert('Корзина пуста'); return false; }
+      const ch = getCheckout();
+      if (!ch.phone) { alert('Укажите телефон'); return false; }
+      if (!ch.city || !ch.street || !ch.house){ alert('Укажите город, улицу и дом'); return false; }
+      return true;
+    }
+
+    // ================== Каталог из Sheets (CSV) ==================
+    async function loadCatalogFromSheet(){
+      const grid = document.getElementById('productsGrid');
+      try{
+        const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + 't=' + Date.now());
+        if (!res.ok) throw new Error('Не удалось загрузить CSV');
+        const csv = await res.text();
+        const parsed = Papa.parse(csv, { header:true, skipEmptyLines:true });
+        const rows = parsed.data;
+
+        products = rows.map((r, i) => {
+          const volumes = {};
+          [["price_2ml","2"],["price_5ml","5"],["price_10ml","10"],["price_15ml","15"],["price_20ml","20"]]
+            .forEach(([col,ml]) => { const v = toInt(r[col]); if(v) volumes[ml]=v; });
+
+          const p = {
+            id: i+1,
+            brand: r.brand || "",
+            name: r.name || "",
+            description: r.description_short || `${r.brand||""} ${r.name||""}`,
+            fullDescription: r.description_full || "",
+            emoji: "🧴",
+            notes: { top: r.notes_top||"—", heart: r.notes_heart||"—", base: r.notes_base||"—" },
+            season: r.season||"Универсальный",
+            longevity: r.longevity||"—",
+            sillage: r.sillage||"—",
+            volumes,
+            sets: {}
+          };
+          const rawUrl = (r.image_url||"").trim();
+          p.image = rawUrl ? normalizeDrive(rawUrl) : imagePathFor(p);
+          return p;
+        });
+
+        displayProducts();
+      }catch(err){
+        grid.innerHTML = `<div class="empty-cart" style="color:#888;text-align:center">Ошибка загрузки каталога: ${err.message}. Проверь ссылку на CSV.</div>`;
+      }
+    }
+
+    // ================== Рендер каталога ==================
+    function displayProducts(){
+      const grid=document.getElementById('productsGrid');
+      grid.innerHTML='';
+      products.forEach(p=>{
+        const prices = Object.values(p.volumes||{});
+        const minPrice = prices.length? Math.min(...prices) : null;
+        const card=document.createElement('div');
+        card.className='product-card';
+        card.onclick=()=>openProductModal(p.id);
+        const src = p.image;
+        const fallback = (p.emoji || '🧴').replace(/"/g,'&quot;');
+        const priceHtml = minPrice? `от ${rub(minPrice)} ₸` : `Цена по запросу`;
+        card.innerHTML=`
+          <img class="product-image" src="${src}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;product-image&quot;>${fallback}</div>'">
+          <div class="product-brand">${p.brand}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-price-range">${priceHtml}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ================== Модалка товара ==================
+    function generateVolumeOptions(product, productId) {
+      let html = '';
+      const entries = Object.entries(product.volumes||{});
+      if(!entries.length){ return '<div style="color:#999;font-size:13px">Нет доступных объёмов</div>'; }
+      entries.forEach(([volume, price]) => {
+        const isSelected = selectedOptions[productId] && selectedOptions[productId].type === 'volume' && selectedOptions[productId].volume === volume;
+        html += `
+          <div class="volume-option ${isSelected ? 'selected' : ''}" onclick="selectOptionInModal(${productId}, 'volume', '${volume}')">
+            ${volume}мл <span class="volume-price">${rub(price)}₸</span>
+          </div>
+        `;
+      });
+      return html;
+    }
+    function generateSetOptions(product, productId) {
+      const sets = product.sets || {};
+      const keys = Object.keys(sets);
+      if(!keys.length) return '';
+      let html = '<div class="detail-title">Сеты</div><div class="volume-options" id="setOptions-'+productId+'">';
+      keys.forEach((setKey) => {
+        const setData = sets[setKey];
+        const isSelected = selectedOptions[productId] && selectedOptions[productId].type === 'set' && selectedOptions[productId].set === setKey;
+        html += `
+          <div class="set-option ${isSelected ? 'selected' : ''}" onclick="selectOptionInModal(${productId}, 'set', '${setKey}')">
+            <span class="set-description">${setData.description}</span>
+            <span class="set-price">${rub(setData.price)}₸</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+      return html;
+    }
+    function getCurrentPrice(productId) {
+      const product = products.find(p => p.id === productId);
+      const options = selectedOptions[productId];
+      const vols = product?.volumes || {};
+      if (!options) return Object.values(vols)[0] || 0;
+      if (options.type === 'volume') return vols[options.volume] || 0;
+      const s = product.sets?.[options.set];
+      return s ? s.price : 0;
+    }
+    function selectOptionInModal(productId, type, value) {
+      if (!selectedOptions[productId]) selectedOptions[productId] = {type:'volume'};
+      selectedOptions[productId].type = type;
+      if (type === 'volume') selectedOptions[productId].volume = value; else selectedOptions[productId].set = value;
+      const product = products.find(p => p.id === productId);
+      const volEl = document.getElementById(`volumeOptions-${productId}`);
+      if (volEl) volEl.innerHTML = generateVolumeOptions(product, productId);
+      const setEl = document.getElementById(`setOptions-${productId}`);
+      if (setEl && product.sets) setEl.innerHTML = generateSetOptions(product, productId);
+      const priceEl = document.getElementById(`currentPrice-${productId}`);
+      if (priceEl) priceEl.textContent = rub(getCurrentPrice(productId)) + ' ₸';
+    }
+
+    function openProductModal(productId){
+      const product=products.find(p=>p.id===productId);
+      if(!product) return;
+      if(!selectedOptions[productId]){
+        const firstVol = Object.keys(product.volumes||{})[0];
+        selectedOptions[productId] = {type:'volume', volume:firstVol, set:Object.keys(product.sets||{})[0]};
+      }
+      document.getElementById('productModalTitle').textContent = `${product.brand} ${product.name}`;
+      const body=document.getElementById('productModalBody');
+      const imgSrc = product.image;
+      const modalImg = `<img src="${imgSrc}" alt="${product.name}" onerror="this.outerHTML='${(product.emoji||'🧴')}'"/>`;
+      const setsHtml = generateSetOptions(product, productId);
+      body.innerHTML=`
+        <div class="detail-grid">
+          <div class="detail-image">${modalImg}</div>
+          <div>
+            <div class="detail-title">Описание</div>
+            <div class="detail-content" style="margin-bottom:12px">${product.fullDescription || product.description}</div>
+            <div class="detail-title">Пирамида</div>
+            <div class="detail-content" style="margin-bottom:14px">
+              <div><strong>Верхние:</strong> ${product.notes.top}</div>
+              <div><strong>Сердце:</strong> ${product.notes.heart}</div>
+              <div><strong>База:</strong> ${product.notes.base}</div>
+            </div>
+            <div class="detail-title">Объём</div>
+            <div class="volume-options" id="volumeOptions-${productId}">${generateVolumeOptions(product, productId)}</div>
+            ${setsHtml}
+            <div class="current-price" id="currentPrice-${productId}">${rub(getCurrentPrice(productId))} ₸</div>
+            <button class="add-to-cart" onclick="addToCartFromModal(${productId})">Добавить в корзину</button>
+          </div>
+        </div>`;
+      document.getElementById('productModal').style.display='block';
+    }
+    function closeProductModal(){ document.getElementById('productModal').style.display='none'; }
+
+    // ================== Кастомный сет ==================
+    function generateCustomSetGrid() {
+      const grid = document.getElementById('customSetGrid');
+      grid.innerHTML = '';
+      products.forEach(product => {
+        const item = document.createElement('div');
+        item.className = 'custom-item';
+        item.style.cssText = 'border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);cursor:pointer;display:grid;gap:6px;place-items:start';
+        item.onclick = () => toggleCustomSetItem(product.id);
+        const src = product.image;
+        const fallback = (product.emoji||'🧴').replace(/"/g,'&quot;');
+        item.innerHTML = `
+          <div style="width:100%;aspect-ratio:3/4;border-radius:8px;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center">
+            <img src="${src}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain" onerror="this.outerHTML='<div style=\'font-size:28px;color:#888\'>${fallback}</div>'" />
+          </div>
+          <div style="font-weight:600;font-size:12px;">${product.name}</div>
+          <div style="font-size:10px;color:#888;">${product.brand}</div>
+        `;
+        grid.appendChild(item);
+      });
+    }
+    function toggleCustomSetItem(productId) {
+      const index = customSetSelection.indexOf(productId);
+      if (index > -1) customSetSelection.splice(index, 1); else customSetSelection.push(productId);
+      const items = document.querySelectorAll('#customSetGrid .custom-item');
+      items.forEach((item, idx) => {
+        const sel = customSetSelection.includes(products[idx].id);
+        item.style.borderColor = sel? 'var(--accent)' : 'var(--line)';
+      });
+      calculateCustomSet();
+    }
+    function calculateCustomSet() {
+      const volume = document.getElementById('customSetVolume').value;
+      const count = parseInt(document.getElementById('customSetCount').value, 10);
+      const priceDiv = document.getElementById('customSetPrice');
+      const addBtn = document.getElementById('addCustomSetBtn');
+      if (customSetSelection.length === 0){ priceDiv.textContent=''; addBtn.style.display='none'; return; }
+      if (customSetSelection.length > count){ priceDiv.textContent = `Выбрано слишком много (${customSetSelection.length}/${count})`; addBtn.style.display='none'; return; }
+      let totalPrice = 0;
+      customSetSelection.forEach(productId => { const p = products.find(x=>x.id===productId); totalPrice += (p.volumes?.[volume]||0); });
+      if (customSetSelection.length < count){
+        const remaining = count - customSetSelection.length;
+        const avgPrice = totalPrice / customSetSelection.length;
+        totalPrice += avgPrice * remaining;
+      }
+      priceDiv.textContent = `${rub(Math.round(totalPrice))} ₸`;
+      addBtn.style.display = 'block';
+    }
+    function addCustomSetToCart() {
+      const volume = document.getElementById('customSetVolume').value;
+      const count = document.getElementById('customSetCount').value;
+      if (customSetSelection.length === 0) return;
+      const selectedProducts = customSetSelection.map(id => products.find(p => p.id === id));
+      let totalPrice = 0;
+      selectedProducts.forEach(product => { totalPrice += (product.volumes?.[volume]||0); });
+      const itemKey = `custom-set-${Date.now()}`;
+      const productNames = selectedProducts.map(p => p.name).join(', ');
+      cart.push({ key:itemKey, id:'custom-set', name:'Кастомный сет', brand:`${count} флаконов по ${volume}мл`, emoji:'🎨', description:productNames, type:'custom-set', price:Math.round(totalPrice), quantity:1 });
+      updateCartCount();
+      closeCustomSetModal();
+    }
+    function openCustomSetModal(){ generateCustomSetGrid(); document.getElementById('customSetModal').style.display='block'; }
+    function closeCustomSetModal(){ document.getElementById('customSetModal').style.display='none'; customSetSelection = []; }
+
+    // ================== Корзина ==================
+    function addToCartFromModal(productId){ addToCart(productId); closeProductModal(); }
+    function addToCart(productId){
+      const product = products.find(p => p.id === productId);
+      const options = selectedOptions[productId];
+      const price = getCurrentPrice(productId);
+      let itemKey, itemDescription;
+      if (options?.type === 'set'){
+        itemKey = `${productId}-set-${options.set}`;
+        itemDescription = product.sets[options.set].description;
+      } else {
+        const v = options?.volume || Object.keys(product.volumes||{})[0] || '—';
+        itemKey = `${productId}-volume-${v}`;
+        itemDescription = `${v}мл`;
+      }
+      const existingItem = cart.find(item => item.key === itemKey);
+      if (existingItem) existingItem.quantity += 1;
+      else cart.push({ key:itemKey, id:productId, name:product.name, brand:product.brand, emoji:product.emoji||'🧴', description:itemDescription, type:(options?.type||'volume'), price:price, quantity:1 });
+      updateCartCount();
+    }
+    function updateCartCount(){ const count = cart.reduce((s,i)=>s+i.quantity,0); document.getElementById('cartCount').textContent = count; }
+    function openCart(){
+      displayCartItems();
+      document.getElementById('cartModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';          // ← блокируем скролл страницы
+    }
+    function closeCart(){
+      document.getElementById('cartModal').style.display = 'none';
+      document.body.style.overflow = '';                // ← возвращаем как было
+    }
+
+    function displayCartItems(){
+      const cartItems = document.getElementById('cartItems');
+      if (cart.length === 0){
+        cartItems.innerHTML = '<div class="empty-cart" style="text-align:center;color:#888;padding:56px 0">Корзина пуста</div>';
+        document.getElementById('totalPrice').textContent = '0';
+        return;
+      }
+      cartItems.innerHTML = '';
+      let total = 0;
+      cart.forEach(item => {
+        const itemTotal = item.price * item.quantity; total += itemTotal;
+        const cartItem = document.createElement('div'); cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.emoji} ${item.name}</div>
+            <div class="cart-item-details">${item.brand}</div>
+            <div class="cart-item-details">${item.description}</div>
+            <div class="cart-item-price">${rub(item.price)} ₸</div>
+          </div>
+          <div class="quantity-controls">
+            <button class="quantity-btn" onclick="changeQuantity('${item.key}', -1)">−</button>
+            <span style="color:#111;font-weight:600;min-width:18px;text-align:center">${item.quantity}</span>
+            <button class="quantity-btn" onclick="changeQuantity('${item.key}', 1)">+</button>
+            <button class="quantity-btn" style="width:auto;padding:0 10px;border-radius:999px" onclick="removeFromCart('${item.key}')">Удалить</button>
+          </div>`;
+        cartItems.appendChild(cartItem);
+      });
+      document.getElementById('totalPrice').textContent = rub(total);
+    }
+    function changeQuantity(itemKey, change){
+      const item = cart.find(i=>i.key===itemKey); if(!item) return;
+      item.quantity += change;
+      if (item.quantity <= 0) removeFromCart(itemKey);
+      displayCartItems(); updateCartCount();
+    }
+    function removeFromCart(itemKey){ cart = cart.filter(i=>i.key!==itemKey); displayCartItems(); updateCartCount(); }
+
+    // ================== Сообщения (WA/TG/Share) ==================
+    function buildOrderMessage(){
+      if (cart.length === 0) return 'Корзина пуста';
+      const ch = getCheckout();
+      let message = 'ЗАКАЗ ПАРФЮМЕРИИ\n\n';
+      if (ch.name)   message += `Имя: ${ch.name}\n`;
+      if (ch.phone)  message += `Телефон: ${ch.phone}\n`;
+      const addr = formatAddress(ch);
+      if (addr)      message += `Адрес: ${addr}\n`;
+      if (ch.comment)message += `Комментарий: ${ch.comment}\n`;
+      message += '\nТовары:\n';
+      let total = 0;
+      cart.forEach((item, i) => {
+        const itemTotal = item.price * item.quantity; total += itemTotal;
+        message += `${i+1}. ${item.name}\n${item.brand}\n${item.description}\n${item.quantity} шт. × ${rub(item.price)} ₸ = ${rub(itemTotal)} ₸\n\n`;
+      });
+      message += `ИТОГО: ${rub(total)} ₸`;
+      return message;
+    }
+    function shareCart(){
+      const message = buildOrderMessage();
+      if (cart.length === 0){ alert('Корзина пуста'); return; }
+      if (navigator.share){ navigator.share({ title:'Заказ парфюмерии', text: message }).catch(()=>copyToClipboard(message)); }
+      else { copyToClipboard(message); }
+    }
+    function copyToClipboard(text){
+      navigator.clipboard.writeText(text)
+        .then(()=>alert('Заказ скопирован в буфер обмена'))
+        .catch(()=>{
+          const ta=document.createElement('textarea');
+          ta.value=text; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+          alert('Заказ скопирован в буфер обмена');
+        });
+    }
+    function sendWhatsApp(){
+      if(!validateBeforeSend()) return;
+      const msg=buildOrderMessage();
+      const phone=WHATSAPP_PHONE||'';
+      const url = phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+    function sendTelegram(){
+      if (cart.length===0) return alert('Корзина пуста');
+      const msg=buildOrderMessage();
+      let url = `https://t.me/share/url?text=${encodeURIComponent(msg)}`;
+      if (TELEGRAM_BOT_OR_USERNAME){
+        url = `https://t.me/${TELEGRAM_BOT_OR_USERNAME}?start=${encodeURIComponent(msg.slice(0,512))}`;
+      }
+      window.open(url, '_blank');
+    }
+
+    // ================== Запись заказа в Google Sheets (Apps Script) ==================
+    function buildOrderPayload(){
+      const ch = getCheckout();
+      const items = cart.map((item, idx) => ({
+        index: idx + 1,
+        name: item.name,
+        brand: item.brand,
+        description: item.description,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.price * item.quantity
+      }));
+      const total = items.reduce((s,i)=>s+i.total,0);
+      return {
+        name: ch.name || "",
+        phone: ch.phone || "",
+        city: ch.city || "",
+        street: ch.street || "",
+        house: ch.house || "",
+        flat: ch.flat || "",
+        comment: ch.comment || "",
+        total,
+        items
+      };
+    }
+    async function submitOrder(){
+  if(!validateBeforeSend()) return;
+  const payload = buildOrderPayload();
+  try{
+    const url = `${ORDER_WEBHOOK_URL}?token=${encodeURIComponent(SHEET_TOKEN)}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      // ВАЖНО: без headers — чтобы не было preflight
+      body: JSON.stringify(payload) // строка => Content-Type:text/plain, preflight не будет
+    });
+    const data = await res.json().catch(()=>({ok:false}));
+    if(!res.ok || !data.ok){
+      alert('Не удалось записать заказ в Google Sheets. Проверьте настройки веб-хука.');
+      return;
+    }
+    alert('Заказ записан в Google Sheets ✅');
+  }catch(e){
+    alert('Ошибка сети при записи заказа: ' + e.message);
+  }
+}
+
+
+    // ================== (Опционально) Excel выгрузка ==================
+    function downloadExcel(){
+      if(typeof XLSX === 'undefined'){ alert('SheetJS не подключён'); return; }
+      if(!validateBeforeSend()) return;
+      const ch = getCheckout();
+      const items = cart.map((item, idx)=>({
+        "#": idx+1, Name: item.name, Brand: item.brand, Description: item.description,
+        Quantity: item.quantity, Price: item.price, Total: item.price * item.quantity
+      }));
+      const total = cart.reduce((s,i)=>s + i.price*i.quantity, 0);
+      const order = [
+        { Field: "Имя", Value: ch.name || "" },
+        { Field: "Телефон", Value: ch.phone || "" },
+        { Field: "Адрес", Value: formatAddress(ch) },
+        { Field: "Комментарий", Value: ch.comment || "" },
+        { Field: "Итого (₸)", Value: total }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(order), "Order");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(items), "Items");
+      const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      XLSX.writeFile(wb, `La-Belle-Order-${ts}.xlsx`);
+    }
+
+    // ================== Закрытие модалок по клику вне ==================
+    window.onclick = function(event){
+      ['cartModal','productModal','customSetModal'].forEach(id=>{
+        const modal=document.getElementById(id);
+        if (event.target===modal) modal.style.display='none';
+      });
+    }
+
+    // ================== Старт ==================
+    document.addEventListener('DOMContentLoaded', loadCatalogFromSheet);
+  </script>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="logo">La-Belle</div>
+        <div class="socials">
+          <!-- замените ссылки на свои -->
+          <a href="https://wa.me/7701XXXXXXX" target="_blank" rel="noopener">💬 WhatsApp</a>
+          <a href="https://t.me/your_username" target="_blank" rel="noopener">✈️ Telegram</a>
+          <a href="https://instagram.com/your_instagram" target="_blank" rel="noopener">📷 Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="#">Доставка и оплата</a>
+        <a href="#">Возврат</a>
+        <a href="#">Политика конфиденциальности</a>
+        <a href="#">Публичная оферта</a>
+        <a href="#">Контакты</a>
+      </div>
+      <div class="footer-bottom">
+        <div>© <span id="yearSpan"></span> La-Belle. Все права защищены.</div>
+        <div>Сделано с любовью к ароматам ✨</div>
+      </div>
+    </div>
+    <script>document.getElementById('yearSpan').textContent = new Date().getFullYear();</script>
+  </footer>
+</body>
+</html>
