@@ -117,6 +117,28 @@
 #cartModal .btn-primary{
   background: var(--accent); color: #fff; border-color: var(--accent);
 }
+ /* ===== Custom Set: фиксированная панель расчёта ===== */
+.custom-set-cta{
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding: 12px 0 0;
+  margin-top: 12px;
+}
+.custom-set-cta .row{
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.custom-set-cta .row > *{ flex:0 0 auto }
+.custom-set-cta .grow{ flex:1 1 auto }
+.custom-set-cta .current-price{ margin:0 }
+.custom-set-cta .add-to-cart{ min-width: 220px }
+.btn-wa{
+  border-color:#25D366;
+}
+.btn-wa:hover{
+  box-shadow:0 0 0 2px #25d36633 inset;
+}
 
 
 
@@ -160,24 +182,37 @@
         <button class="close" onclick="closeCustomSetModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="custom-set-section">
-          <div class="detail-title">Выберите парфюмы</div>
-          <div class="custom-set-grid" id="customSetGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
-          <div class="custom-set-controls" style="display:flex;align-items:center;gap:12px;margin-top:12px">
-            <label>Объем</label>
-            <select id="customSetVolume">
-              <option value="2">2мл</option>
-              <option value="5">5мл</option>
-              <option value="10" selected>10мл</option>
-            </select>
-            <label>Количество</label>
-            <input type="number" id="customSetCount" min="2" max="10" value="3" style="width: 70px;">
-            <button onclick="calculateCustomSet()">Рассчитать</button>
-          </div>
-          <div id="customSetPrice" class="current-price" style="margin-top: 12px;"></div>
-          <button class="add-to-cart" id="addCustomSetBtn" onclick="addCustomSetToCart()" style="display:none">Добавить в корзину</button>
-        </div>
+  <div class="custom-set-section">
+    <div class="detail-title">Выберите парфюмы</div>
+
+    <!-- сетка ароматов -->
+    <div class="custom-set-grid" id="customSetGrid"
+         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
+
+    <!-- панель управления -->
+    <div class="custom-set-cta">
+      <div class="row">
+        <label>Объем</label>
+        <select id="customSetVolume">
+          <option value="2">2мл</option>
+          <option value="5">5мл</option>
+          <option value="10" selected>10мл</option>
+        </select>
+
+        <label>Количество</label>
+        <input type="number" id="customSetCount" min="2" max="10" value="3" style="width:80px">
+
+        <button class="btn-secondary" type="button" onclick="calculateCustomSet()">Рассчитать</button>
+
+        <div id="customSetPrice" class="current-price grow" aria-live="polite"></div>
+
+        <button class="add-to-cart" id="addCustomSetBtn" onclick="addCustomSetToCart()" disabled>
+          Добавить в корзину
+        </button>
       </div>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 
@@ -232,7 +267,7 @@
         <div class="total">
           <div class="total-price"><span id="totalPrice">0</span> ₸</div>
           <div class="total-actions">
-            <button class="btn-secondary" onclick="shareCart()">Поделиться</button>
+            <button class="btn-secondary btn-wa" onclick="sendWhatsApp()">💬 WhatsApp</button>
             <button class="btn-primary"  onclick="submitOrder()">Оформить заказ</button>
           </div>
         </div>
@@ -254,7 +289,7 @@
     // 3) Токен безопасности (должен совпадать с AUTH_TOKEN в Apps Script)
     const SHEET_TOKEN = "CHANGE_ME_SECRET";
     // 4) Номер WhatsApp для авто-открытия диалога (без "+")
-    const WHATSAPP_PHONE = "7701XXXXXXX";
+    const WHATSAPP_PHONE = "77022266500";
     // (опционально) Telegram username или бот
     const TELEGRAM_BOT_OR_USERNAME = ""; // если пусто — t.me/share
 
@@ -485,47 +520,115 @@
       });
     }
     function toggleCustomSetItem(productId) {
-      const index = customSetSelection.indexOf(productId);
-      if (index > -1) customSetSelection.splice(index, 1); else customSetSelection.push(productId);
-      const items = document.querySelectorAll('#customSetGrid .custom-item');
-      items.forEach((item, idx) => {
-        const sel = customSetSelection.includes(products[idx].id);
-        item.style.borderColor = sel? 'var(--accent)' : 'var(--line)';
-      });
-      calculateCustomSet();
-    }
+  const i = customSetSelection.indexOf(productId);
+  if (i > -1) customSetSelection.splice(i, 1); else customSetSelection.push(productId);
+
+  const items = document.querySelectorAll('#customSetGrid .custom-item');
+  items.forEach((item, idx) => {
+    const sel = customSetSelection.includes(products[idx].id);
+    item.style.borderColor = sel ? 'var(--accent)' : 'var(--line)';
+    item.style.boxShadow = sel ? '0 0 0 2px var(--accent) inset' : 'none';
+  });
+
+  calculateCustomSet(); // ← пересчитать немедленно
+}
+
     function calculateCustomSet() {
-      const volume = document.getElementById('customSetVolume').value;
-      const count = parseInt(document.getElementById('customSetCount').value, 10);
-      const priceDiv = document.getElementById('customSetPrice');
-      const addBtn = document.getElementById('addCustomSetBtn');
-      if (customSetSelection.length === 0){ priceDiv.textContent=''; addBtn.style.display='none'; return; }
-      if (customSetSelection.length > count){ priceDiv.textContent = `Выбрано слишком много (${customSetSelection.length}/${count})`; addBtn.style.display='none'; return; }
-      let totalPrice = 0;
-      customSetSelection.forEach(productId => { const p = products.find(x=>x.id===productId); totalPrice += (p.volumes?.[volume]||0); });
-      if (customSetSelection.length < count){
-        const remaining = count - customSetSelection.length;
-        const avgPrice = totalPrice / customSetSelection.length;
-        totalPrice += avgPrice * remaining;
-      }
-      priceDiv.textContent = `${rub(Math.round(totalPrice))} ₸`;
-      addBtn.style.display = 'block';
-    }
+  const priceDiv = document.getElementById('customSetPrice');
+  const addBtn   = document.getElementById('addCustomSetBtn');
+  const volume   = document.getElementById('customSetVolume').value;
+  const count    = parseInt(document.getElementById('customSetCount').value, 10) || 0;
+
+  // базовые проверки
+  if (!count || count < 2) {
+    addBtn.disabled = true;
+    priceDiv.textContent = 'Выберите количество от 2';
+    return;
+  }
+  if (customSetSelection.length === 0) {
+    addBtn.disabled = true;
+    priceDiv.textContent = `Выберите до ${count} ароматов`;
+    return;
+  }
+  if (customSetSelection.length > count) {
+    addBtn.disabled = true;
+    priceDiv.textContent = `Выбрано слишком много (${customSetSelection.length}/${count})`;
+    return;
+  }
+
+  // считаем
+  let total = 0;
+  customSetSelection.forEach(id => {
+    const p = products.find(x => x.id === id);
+    total += (p?.volumes?.[volume] || 0);
+  });
+
+  // если выбрано меньше, чем count — добиваем средним (твоя бизнес-логика)
+  if (customSetSelection.length < count) {
+    const remaining = count - customSetSelection.length;
+    const avg = total / customSetSelection.length;
+    total += avg * remaining;
+  }
+
+  const rounded = Math.round(total);
+  priceDiv.textContent = `${rub(rounded)} ₸`;
+  addBtn.disabled = rounded <= 0;
+}
+
     function addCustomSetToCart() {
-      const volume = document.getElementById('customSetVolume').value;
-      const count = document.getElementById('customSetCount').value;
-      if (customSetSelection.length === 0) return;
-      const selectedProducts = customSetSelection.map(id => products.find(p => p.id === id));
-      let totalPrice = 0;
-      selectedProducts.forEach(product => { totalPrice += (product.volumes?.[volume]||0); });
-      const itemKey = `custom-set-${Date.now()}`;
-      const productNames = selectedProducts.map(p => p.name).join(', ');
-      cart.push({ key:itemKey, id:'custom-set', name:'Кастомный сет', brand:`${count} флаконов по ${volume}мл`, emoji:'🎨', description:productNames, type:'custom-set', price:Math.round(totalPrice), quantity:1 });
-      updateCartCount();
-      closeCustomSetModal();
-    }
-    function openCustomSetModal(){ generateCustomSetGrid(); document.getElementById('customSetModal').style.display='block'; }
-    function closeCustomSetModal(){ document.getElementById('customSetModal').style.display='none'; customSetSelection = []; }
+  const volume = document.getElementById('customSetVolume').value;
+  const count  = parseInt(document.getElementById('customSetCount').value, 10) || 0;
+  const addBtn = document.getElementById('addCustomSetBtn');
+  if (addBtn.disabled) return; // невалидно — выходим
+  if (!customSetSelection.length) return;
+
+  const selectedProducts = customSetSelection.map(id => products.find(p => p.id === id));
+  let totalPrice = 0;
+  selectedProducts.forEach(p => { totalPrice += (p?.volumes?.[volume] || 0); });
+  if (selectedProducts.length < count) {
+    const remaining = count - selectedProducts.length;
+    const avg = totalPrice / selectedProducts.length;
+    totalPrice += avg * remaining;
+  }
+
+  const itemKey = `custom-set-${Date.now()}`;
+  const productNames = selectedProducts.map(p => p.name).join(', ');
+  cart.push({
+    key: itemKey,
+    id: 'custom-set',
+    name: 'Кастомный сет',
+    brand: `${count} флаконов по ${volume}мл`,
+    emoji: '🎨',
+    description: productNames,
+    type: 'custom-set',
+    price: Math.round(totalPrice),
+    quantity: 1
+  });
+
+  updateCartCount();
+  closeCustomSetModal();
+}
+
+   function openCustomSetModal() {
+  // дефолты при каждом открытии
+  customSetSelection = [];
+  document.getElementById('customSetVolume').value = '10';
+  document.getElementById('customSetCount').value = '3';
+
+  generateCustomSetGrid();
+
+  // автопересчёт при любых изменениях
+  document.getElementById('customSetVolume').onchange = calculateCustomSet;
+  document.getElementById('customSetCount').oninput = calculateCustomSet;
+
+  calculateCustomSet(); // показать 0₸/подсказку сразу
+  document.getElementById('customSetModal').style.display = 'block';
+}
+
+function closeCustomSetModal() {
+  document.getElementById('customSetModal').style.display = 'none';
+  customSetSelection = [];
+}
 
     // ================== Корзина ==================
     function addToCartFromModal(productId){ addToCart(productId); closeProductModal(); }
@@ -739,17 +842,9 @@
         <div class="logo">La-Belle</div>
         <div class="socials">
           <!-- замените ссылки на свои -->
-          <a href="https://wa.me/7701XXXXXXX" target="_blank" rel="noopener">💬 WhatsApp</a>
-          <a href="https://t.me/your_username" target="_blank" rel="noopener">✈️ Telegram</a>
-          <a href="https://instagram.com/your_instagram" target="_blank" rel="noopener">📷 Instagram</a>
+          <a href="https://wa.me/77022266500" target="_blank" rel="noopener">💬 WhatsApp</a>
+          <a href="https://https://www.instagram.com/la_belle_parfums/" target="_blank" rel="noopener">📷 Instagram</a>
         </div>
-      </div>
-      <div class="footer-links">
-        <a href="#">Доставка и оплата</a>
-        <a href="#">Возврат</a>
-        <a href="#">Политика конфиденциальности</a>
-        <a href="#">Публичная оферта</a>
-        <a href="#">Контакты</a>
       </div>
       <div class="footer-bottom">
         <div>© <span id="yearSpan"></span> La-Belle. Все права защищены.</div>
