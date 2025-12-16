@@ -299,6 +299,63 @@
     let selectedOptions = {};
     let customSetSelection = [];
 
+
+    // ===== LocalStorage keys =====
+const LS_CART_KEY = 'lb_cart_v1';
+const LS_CHECKOUT_KEY = 'lb_checkout_v1';
+// Срок жизни корзины (например, 7 дней)
+const LS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function saveCartToLS(){
+  try{
+    localStorage.setItem(LS_CART_KEY, JSON.stringify({t: Date.now(), cart}));
+  }catch(e){ /* ignore */ }
+}
+
+function loadCartFromLS(){
+  try{
+    const raw = localStorage.getItem(LS_CART_KEY);
+    if(!raw) return;
+    const obj = JSON.parse(raw);
+    if(!obj || !Array.isArray(obj.cart)) return;
+    // TTL
+    if (obj.t && (Date.now() - obj.t) > LS_TTL_MS){
+      localStorage.removeItem(LS_CART_KEY);
+      return;
+    }
+    cart = obj.cart;
+  }catch(e){ /* ignore */ }
+}
+
+function clearCartLS(){
+  try{ localStorage.removeItem(LS_CART_KEY); }catch(e){}
+}
+
+function saveCheckoutToLS(){
+  try{ localStorage.setItem(LS_CHECKOUT_KEY, JSON.stringify(getCheckout())); }catch(e){}
+}
+
+function loadCheckoutFromLS(){
+  try{
+    const raw = localStorage.getItem(LS_CHECKOUT_KEY);
+    if(!raw) return;
+    const obj = JSON.parse(raw)||{};
+    const set = (id, val)=>{ const el=document.getElementById(id); if(el && typeof val==='string') el.value = val; };
+    set('c_name',   obj.name);
+    set('c_phone',  obj.phone);
+    set('c_city',   obj.city);
+    set('c_street', obj.street);
+    set('c_house',  obj.house);
+    set('c_flat',   obj.flat);
+    const comEl = document.getElementById('c_comment');
+    if (comEl && typeof obj.comment==='string') comEl.value = obj.comment;
+  }catch(e){ /* ignore */ }
+}
+
+function clearCheckoutLS(){
+  try{ localStorage.removeItem(LS_CHECKOUT_KEY); }catch(e){}
+}
+
     // ================== Утилиты ==================
     function rub(n){ try{return Number(n).toLocaleString('ru-RU')}catch(e){return n} }
     function slug(s){ return (s||"").toLowerCase().replace(/['’]/g,"").replace(/[^a-z0-9а-яё\s-]/gi," ").replace(/\s+/g," ").trim().replace(/\s/g,"_"); }
@@ -606,6 +663,7 @@
   });
 
   updateCartCount();
+  saveCartToLS();
   closeCustomSetModal();
 }
 
@@ -649,6 +707,7 @@ function closeCustomSetModal() {
       if (existingItem) existingItem.quantity += 1;
       else cart.push({ key:itemKey, id:productId, name:product.name, brand:product.brand, emoji:product.emoji||'🧴', description:itemDescription, type:(options?.type||'volume'), price:price, quantity:1 });
       updateCartCount();
+      saveCartToLS();
     }
     function updateCartCount(){ const count = cart.reduce((s,i)=>s+i.quantity,0); document.getElementById('cartCount').textContent = count; }
     function openCart(){
@@ -694,9 +753,9 @@ function closeCustomSetModal() {
       const item = cart.find(i=>i.key===itemKey); if(!item) return;
       item.quantity += change;
       if (item.quantity <= 0) removeFromCart(itemKey);
-      displayCartItems(); updateCartCount();
+      displayCartItems(); updateCartCount(); saveCartToLS();
     }
-    function removeFromCart(itemKey){ cart = cart.filter(i=>i.key!==itemKey); displayCartItems(); updateCartCount(); }
+    function removeFromCart(itemKey){ cart = cart.filter(i=>i.key!==itemKey); displayCartItems(); updateCartCount(); saveCartToLS();}
 
     // ================== Сообщения (WA/TG/Share) ==================
     function buildOrderMessage(){
@@ -754,49 +813,74 @@ function closeCustomSetModal() {
 
     // ================== Запись заказа в Google Sheets (Apps Script) ==================
     function buildOrderPayload(){
-      const ch = getCheckout();
-      const items = cart.map((item, idx) => ({
-        index: idx + 1,
-        name: item.name,
-        brand: item.brand,
-        description: item.description,
-        quantity: item.quantity,
-        price: item.price,
-        total: item.price * item.quantity
-      }));
-      const total = items.reduce((s,i)=>s+i.total,0);
-      return {
-        name: ch.name || "",
-        phone: ch.phone || "",
-        city: ch.city || "",
-        street: ch.street || "",
-        house: ch.house || "",
-        flat: ch.flat || "",
-        comment: ch.comment || "",
-        total,
-        items
-      };
-    }
-    async function submitOrder(){
-  if(!validateBeforeSend()) return;
+  const ch = getCheckout();
+  const items = cart.map((item, idx) => ({
+    index: idx + 1,
+    name: item.name,
+    brand: item.brand,
+    description: item.description,
+    quantity: item.quantity,
+    price: item.price,
+    total: item.price * item.quantity
+  }));
+  const total = items.reduce((s,i)=> s + i.total, 0);
+  return {
+    name: ch.name || "",
+    phone: ch.phone || "",
+    city: ch.city || "",
+    street: ch.street || "",
+    house: ch.house || "",
+    flat: ch.flat || "",
+    comment: ch.comment || "",
+    total,
+    items
+  };
+}
+
+async function submitOrder(){
+  if (!validateBeforeSend()) return;
   const payload = buildOrderPayload();
+
   try{
     const url = `${ORDER_WEBHOOK_URL}?token=${encodeURIComponent(SHEET_TOKEN)}`;
     const res = await fetch(url, {
       method: 'POST',
-      // ВАЖНО: без headers — чтобы не было preflight
-      body: JSON.stringify(payload) // строка => Content-Type:text/plain, preflight не будет
+      // без явных headers, чтобы не триггерить preflight
+      body: JSON.stringify(payload)
     });
-    const data = await res.json().catch(()=>({ok:false}));
-    if(!res.ok || !data.ok){
-      alert('Не удалось записать заказ в Google Sheets. Проверьте настройки веб-хука.');
+
+    // если сервер гарантированно возвращает JSON вида { ok: true }
+    let data = null;
+    try { data = await res.json(); } catch(_) { /* оставим null */ }
+
+    // считаем успехом либо res.ok, либо data?.ok === true
+    const success = res.ok && (data?.ok ?? true);
+
+    if (!success){
+      alert('Не удалось записать заказ в Google Sheets. Проверьте веб-хук/токен.');
       return;
     }
+
     alert('Заказ записан в Google Sheets ✅');
-  }catch(e){
+
+    // очистка корзины + LS + формы
+    cart = [];
+    clearCartLS();
+    displayCartItems();
+    updateCartCount();
+
+    ['c_name','c_phone','c_city','c_street','c_house','c_flat','c_comment'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    clearCheckoutLS();
+
+    closeCart();
+  } catch(e){
     alert('Ошибка сети при записи заказа: ' + e.message);
   }
 }
+
 
 
     // ================== (Опционально) Excel выгрузка ==================
@@ -832,7 +916,21 @@ function closeCustomSetModal() {
     }
 
     // ================== Старт ==================
-    document.addEventListener('DOMContentLoaded', loadCatalogFromSheet);
+document.addEventListener('DOMContentLoaded', () => {
+  // восстановить корзину и чек-аут из localStorage
+  loadCartFromLS();
+  loadCheckoutFromLS();
+  updateCartCount();
+
+  // повесить автосохранение полей доставки
+  ['c_name','c_phone','c_city','c_street','c_house','c_flat','c_comment'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', saveCheckoutToLS);
+  });
+
+  // дальше грузим каталог
+  loadCatalogFromSheet();
+});
   </script>
 
   <!-- Footer -->
