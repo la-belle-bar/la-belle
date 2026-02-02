@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>La-Belle</title>
+  <title>La Belle</title>
   <style>
     :root{
       --bg:#f7f7f8; --fg:#0b0b0c; --muted:#6e6e73; --line:#e6e7eb; --line-strong:#d9dae0;
@@ -139,7 +139,77 @@
 .btn-wa:hover{
   box-shadow:0 0 0 2px #25d36633 inset;
 }
+/* ===== Mobile grid: 2 колонки вместо "списка" ===== */
+@media (max-width: 520px){
+  .container{ padding: 0 12px; }
 
+  .products-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 16px 0 56px;
+  }
+
+  .product-card{
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .product-name{ font-size: 14px; line-height: 1.2; }
+  .product-brand{ font-size: 11px; }
+  .product-price-range{ font-size: 13px; }
+
+  .product-image{
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+}
+
+/* ===== Header layout fix ===== */
+.logo{
+  white-space: nowrap;           /* чтобы La-Belle НЕ переносилось */
+}
+
+.search-input{
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 14px;
+}
+
+/* контейнер кнопок */
+.header-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* на мобилке делаем аккуратную сетку */
+@media (max-width: 520px){
+  .header-content{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo actions"
+      "search search";
+    gap: 12px;
+    align-items: center;
+  }
+  .logo{ grid-area: logo; font-size: 16px; }
+  .header-actions{ grid-area: actions; gap: 8px; }
+  .search-input{ grid-area: search; max-width: none; }
+
+  .cart-btn,.custom-set-btn{
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 999px;
+  }
+
+  /* чтобы бейдж не наезжал */
+  .cart-count{ top:-8px; right:-8px; }
+}
 
 
   </style>
@@ -147,14 +217,21 @@
 <body>
   <div class="container">
     <header>
-      <div class="header-content">
-        <div class="logo">La-Belle</div>
-        <div>
-          <button class="custom-set-btn" onclick="openCustomSetModal()">Создать сет</button>
-          <button class="cart-btn" onclick="openCart()">Корзина <span class="cart-count" id="cartCount">0</span></button>
-        </div>
-      </div>
-    </header>
+  <div class="header-content">
+    <div class="logo">La Belle</div>
+
+    <div class="header-actions">
+      <button class="custom-set-btn" onclick="openCustomSetModal()">Создать сет</button>
+      <button class="cart-btn" onclick="openCart()">
+        Корзина <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+
+    <input id="searchInput" class="search-input" type="search"
+           placeholder="Поиск по названию или бренду…" />
+  </div>
+</header>
+
 
     <div class="products-grid" id="productsGrid">
       <div class="skeleton">
@@ -184,6 +261,8 @@
       <div class="modal-body">
   <div class="custom-set-section">
     <div class="detail-title">Выберите парфюмы</div>
+<input id="customSetSearch" class="search-input"
+       type="search" placeholder="Поиск по ароматам…" style="max-width:none;margin:10px 0 12px;">
 
     <!-- сетка ароматов -->
     <div class="custom-set-grid" id="customSetGrid"
@@ -295,6 +374,27 @@
 
     // ================== Глобальное состояние ==================
     let products = [];
+    let searchQuery = "";
+    let customSetQuery = "";
+
+function getFilteredProductsByQuery(q){
+  const s = (q || "").trim().toLowerCase();
+  if(!s) return products;
+  return products.filter(p => (`${p.name||""} ${p.brand||""}`).toLowerCase().includes(s));
+}
+
+
+// фильтруем по name + brand
+function getFilteredProducts(){
+  const q = (searchQuery || "").trim().toLowerCase();
+  if(!q) return products;
+
+  return products.filter(p => {
+    const hay = `${p.name || ""} ${p.brand || ""}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
     let cart = [];
     let selectedOptions = {};
     let customSetSelection = [];
@@ -444,26 +544,40 @@ function clearCheckoutLS(){
 
     // ================== Рендер каталога ==================
     function displayProducts(){
-      const grid=document.getElementById('productsGrid');
-      grid.innerHTML='';
-      products.forEach(p=>{
-        const prices = Object.values(p.volumes||{});
-        const minPrice = prices.length? Math.min(...prices) : null;
-        const card=document.createElement('div');
-        card.className='product-card';
-        card.onclick=()=>openProductModal(p.id);
-        const src = p.image;
-        const fallback = (p.emoji || '🧴').replace(/"/g,'&quot;');
-        const priceHtml = minPrice? `от ${rub(minPrice)} ₸` : `Цена по запросу`;
-        card.innerHTML=`
-          <img class="product-image" src="${src}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;product-image&quot;>${fallback}</div>'">
-          <div class="product-brand">${p.brand}</div>
-          <div class="product-name">${p.name}</div>
-          <div class="product-price-range">${priceHtml}</div>
-        `;
-        grid.appendChild(card);
-      });
-    }
+  const grid=document.getElementById('productsGrid');
+  grid.innerHTML='';
+
+  const list = getFilteredProducts();
+
+  if (!list.length){
+    grid.innerHTML = `<div class="empty-cart" style="color:#888;text-align:center;padding:40px 0">
+      Ничего не найдено
+    </div>`;
+    return;
+  }
+
+  list.forEach(p=>{
+    const prices = Object.values(p.volumes||{});
+    const minPrice = prices.length? Math.min(...prices) : null;
+
+    const card=document.createElement('div');
+    card.className='product-card';
+    card.onclick=()=>openProductModal(p.id);
+
+    const src = p.image;
+    const fallback = (p.emoji || '🧴').replace(/"/g,'&quot;');
+    const priceHtml = minPrice? `от ${rub(minPrice)} ₸` : `Цена по запросу`;
+
+    card.innerHTML=`
+      <img class="product-image" src="${src}" alt="${p.name}"
+           onerror="this.outerHTML='<div class=&quot;product-image&quot;>${fallback}</div>'">
+      <div class="product-brand">${p.brand}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price-range">${priceHtml}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
 
     // ================== Модалка товара ==================
     function generateVolumeOptions(product, productId) {
@@ -557,38 +671,65 @@ function clearCheckoutLS(){
 
     // ================== Кастомный сет ==================
     function generateCustomSetGrid() {
-      const grid = document.getElementById('customSetGrid');
-      grid.innerHTML = '';
-      products.forEach(product => {
-        const item = document.createElement('div');
-        item.className = 'custom-item';
-        item.style.cssText = 'border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);cursor:pointer;display:grid;gap:6px;place-items:start';
-        item.onclick = () => toggleCustomSetItem(product.id);
-        const src = product.image;
-        const fallback = (product.emoji||'🧴').replace(/"/g,'&quot;');
-        item.innerHTML = `
-          <div style="width:100%;aspect-ratio:3/4;border-radius:8px;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center">
-            <img src="${src}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain" onerror="this.outerHTML='<div style=\'font-size:28px;color:#888\'>${fallback}</div>'" />
-          </div>
-          <div style="font-weight:600;font-size:12px;">${product.name}</div>
-          <div style="font-size:10px;color:#888;">${product.brand}</div>
-        `;
-        grid.appendChild(item);
-      });
-    }
-    function toggleCustomSetItem(productId) {
-  const i = customSetSelection.indexOf(productId);
-  if (i > -1) customSetSelection.splice(i, 1); else customSetSelection.push(productId);
+  const grid = document.getElementById('customSetGrid');
+  grid.innerHTML = '';
 
-  const items = document.querySelectorAll('#customSetGrid .custom-item');
-  items.forEach((item, idx) => {
-    const sel = customSetSelection.includes(products[idx].id);
-    item.style.borderColor = sel ? 'var(--accent)' : 'var(--line)';
-    item.style.boxShadow = sel ? '0 0 0 2px var(--accent) inset' : 'none';
+  const list = getFilteredProductsByQuery(customSetQuery);
+
+  if(!list.length){
+    grid.innerHTML = `<div style="color:#888;padding:18px 0">Ничего не найдено</div>`;
+    return;
+  }
+
+  list.forEach(product => {
+    const item = document.createElement('div');
+    item.className = 'custom-item';
+    item.dataset.id = product.id;
+
+    item.style.cssText =
+      'border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);' +
+      'cursor:pointer;display:grid;gap:6px;place-items:start';
+
+    item.onclick = () => toggleCustomSetItem(product.id);
+
+    const src = product.image;
+    const fallback = (product.emoji||'🧴').replace(/"/g,'&quot;');
+
+    const selected = customSetSelection.includes(product.id);
+    if(selected){
+      item.style.borderColor = 'var(--accent)';
+      item.style.boxShadow = '0 0 0 2px var(--accent) inset';
+    }
+
+    item.innerHTML = `
+      <div style="width:100%;aspect-ratio:3/4;border-radius:8px;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center">
+        <img src="${src}" alt="${product.name}"
+             style="width:100%;height:100%;object-fit:contain"
+             onerror="this.outerHTML='<div style=\\'font-size:28px;color:#888\\'>${fallback}</div>'" />
+      </div>
+      <div style="font-weight:600;font-size:12px;">${product.name}</div>
+      <div style="font-size:10px;color:#888;">${product.brand}</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function toggleCustomSetItem(productId) {
+  const i = customSetSelection.indexOf(productId);
+  if (i > -1) customSetSelection.splice(i, 1);
+  else customSetSelection.push(productId);
+
+  // обновляем подсветку по data-id (работает даже при фильтре)
+  document.querySelectorAll('#customSetGrid .custom-item').forEach(el => {
+    const id = parseInt(el.dataset.id, 10);
+    const sel = customSetSelection.includes(id);
+    el.style.borderColor = sel ? 'var(--accent)' : 'var(--line)';
+    el.style.boxShadow = sel ? '0 0 0 2px var(--accent) inset' : 'none';
   });
 
-  calculateCustomSet(); // ← пересчитать немедленно
+  calculateCustomSet();
 }
+
 
     function calculateCustomSet() {
   const priceDiv = document.getElementById('customSetPrice');
@@ -678,6 +819,15 @@ function clearCheckoutLS(){
   // автопересчёт при любых изменениях
   document.getElementById('customSetVolume').onchange = calculateCustomSet;
   document.getElementById('customSetCount').oninput = calculateCustomSet;
+  const cs = document.getElementById('customSetSearch');
+  if(cs){
+    cs.value = '';
+    customSetQuery = '';
+    cs.oninput = () => {
+      customSetQuery = cs.value;
+      generateCustomSetGrid();
+    };
+  }
 
   calculateCustomSet(); // показать 0₸/подсказку сразу
   document.getElementById('customSetModal').style.display = 'block';
@@ -927,6 +1077,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', saveCheckoutToLS);
   });
+  const si = document.getElementById('searchInput');
+  if(si){
+    si.addEventListener('input', () => {
+      searchQuery = si.value;
+      displayProducts();
+    });
+  }
 
   // дальше грузим каталог
   loadCatalogFromSheet();
@@ -937,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <footer>
     <div class="footer-inner">
       <div class="footer-top">
-        <div class="logo">La-Belle</div>
+        <div class="logo">La Belle</div>
         <div class="socials">
           <!-- замените ссылки на свои -->
           <a href="https://wa.me/77022266500" target="_blank" rel="noopener">💬 WhatsApp</a>
@@ -945,7 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
       <div class="footer-bottom">
-        <div>© <span id="yearSpan"></span> La-Belle. Все права защищены.</div>
+        <div>© <span id="yearSpan"></span> La Belle. Все права защищены.</div>
         <div>Сделано с любовью к ароматам ✨</div>
       </div>
     </div>
