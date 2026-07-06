@@ -1,0 +1,55 @@
+<!-- @dsCard group="Основы" name="Палитра" subtitle="Токены цвета из styles.css (:root)" width="720" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — палитра</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:22px;margin:4px 0 18px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.swatch{
+  border:1px solid var(--line);border-radius:8px;background:var(--card);overflow:hidden;
+}
+.swatch-color{height:64px;border-bottom:1px solid var(--line)}
+.swatch-info{padding:8px 10px;display:grid;gap:2px}
+.swatch-name{font-size:13px;font-weight:700}
+.swatch-value{color:var(--muted);font-size:12px}
+.shadow-demo{
+  margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:8px;
+  background:var(--card);box-shadow:var(--shadow);max-width:320px;
+}
+</style>
+</head>
+<body>
+  <p class="eyebrow">La Belle · основы</p>
+  <h1>Палитра</h1>
+  <div class="swatches">
+    <div class="swatch"><div class="swatch-color" style="background:#f7f7f8"></div><div class="swatch-info"><span class="swatch-name">--bg</span><span class="swatch-value">#f7f7f8 · фон страницы</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#0b0b0c"></div><div class="swatch-info"><span class="swatch-name">--fg</span><span class="swatch-value">#0b0b0c · основной текст</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#686a70"></div><div class="swatch-info"><span class="swatch-name">--muted</span><span class="swatch-value">#686a70 · вторичный текст</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#e3e4e8"></div><div class="swatch-info"><span class="swatch-name">--line</span><span class="swatch-value">#e3e4e8 · границы</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#d2d4da"></div><div class="swatch-info"><span class="swatch-name">--line-strong</span><span class="swatch-value">#d2d4da · границы (hover)</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#ffffff"></div><div class="swatch-info"><span class="swatch-name">--card</span><span class="swatch-value">#ffffff · поверхности</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#f1f2f4"></div><div class="swatch-info"><span class="swatch-name">--chip</span><span class="swatch-value">#f1f2f4 · чипы, теги</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#111111"></div><div class="swatch-info"><span class="swatch-name">--accent</span><span class="swatch-value">#111111 · акцент, CTA</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#ece8df"></div><div class="swatch-info"><span class="swatch-name">--accent-soft</span><span class="swatch-value">#ece8df · мягкий акцент</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#25D366"></div><div class="swatch-info"><span class="swatch-name">--wa</span><span class="swatch-value">#25D366 · WhatsApp</span></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#a23b3b"></div><div class="swatch-info"><span class="swatch-name">--danger</span><span class="swatch-value">#a23b3b · ошибки, «нет в наличии»</span></div></div>
+  </div>
+  <div class="shadow-demo">
+    <strong>--shadow</strong><br>
+    <span style="color:var(--muted);font-size:13px">0 12px 32px rgba(12,14,18,.08)</span>
+  </div>
+</body>
+</html>

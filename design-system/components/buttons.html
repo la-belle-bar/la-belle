@@ -1,0 +1,78 @@
+<!-- @dsCard group="Компоненты" name="Кнопки" subtitle="Primary / secondary / WhatsApp / add-to-cart / cart-btn" width="640" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — кнопки</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button{font:inherit;color:inherit}
+.demo-label{color:var(--muted);font-size:12px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.demo-label:first-child{margin-top:0}
+.demo-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+/* стили из styles.css */
+.cart-btn,.btn-primary,.btn-secondary{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:8px;border:1px solid var(--line);background:var(--card);
+  padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;transition:.18s;
+}
+.cart-btn{position:relative;white-space:nowrap}
+.cart-btn:hover,.btn-secondary:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:.92;transform:translateY(-1px)}
+.btn-wa{border-color:var(--wa)}
+.btn-wa:hover{box-shadow:0 0 0 2px #25d36633 inset}
+.is-disabled{pointer-events:none;opacity:.5}
+.cart-count{
+  position:absolute;top:-7px;right:-7px;width:18px;height:18px;display:grid;place-items:center;
+  border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;
+}
+.add-to-cart{
+  width:100%;min-height:46px;border:0;border-radius:8px;background:var(--accent);color:#fff;
+  padding:12px 16px;cursor:pointer;font-weight:750;
+}
+.add-to-cart:hover{opacity:.93}
+.add-to-cart:disabled{cursor:not-allowed;opacity:.42}
+.close{
+  width:38px;height:38px;border:0;border-radius:8px;background:transparent;
+  color:var(--muted);cursor:pointer;font-size:26px;
+}
+.close:hover{background:var(--chip);color:var(--fg)}
+.add-wrap{max-width:280px;display:grid;gap:10px}
+</style>
+</head>
+<body>
+  <div class="demo-label">Основные</div>
+  <div class="demo-row">
+    <button class="btn-primary" type="button">Оформить заказ</button>
+    <button class="btn-secondary" type="button">Сбросить</button>
+    <button class="btn-secondary btn-wa" type="button">WhatsApp</button>
+    <button class="btn-secondary is-disabled" type="button">Недоступно</button>
+  </div>
+
+  <div class="demo-label">Кнопка корзины со счётчиком</div>
+  <div class="demo-row">
+    <button class="cart-btn" type="button">
+      <span>Корзина</span>
+      <span class="cart-count">3</span>
+    </button>
+    <button class="close" type="button" aria-label="Закрыть">&times;</button>
+  </div>
+
+  <div class="demo-label">Добавить в корзину (полная ширина)</div>
+  <div class="add-wrap">
+    <button class="add-to-cart" type="button">Добавить в корзину</button>
+    <button class="add-to-cart" type="button" disabled>Добавить в корзину</button>
+  </div>
+</body>
+</html>

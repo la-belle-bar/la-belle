@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'self'; object-src 'none'; form-action 'self'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>La Belle - admin</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body data-page="admin">
+  <main class="admin-page">
+    <section class="admin-login" id="adminLogin">
+      <div class="admin-login-panel">
+        <p class="eyebrow" data-i18n="admin.private">Закрытый раздел</p>
+        <h1 data-i18n="admin.title">Админ-панель</h1>
+        <label class="field">
+          <span data-i18n="admin.password">Секретный код</span>
+          <input id="adminPassword" type="password" autocomplete="current-password" />
+        </label>
+        <button class="btn-primary" id="adminLoginBtn" type="button" data-i18n="admin.login">Войти</button>
+        <div class="admin-error" id="adminLoginError"></div>
+      </div>
+    </section>
+
+    <section class="admin-shell is-hidden" id="adminShell">
+      <header class="admin-header">
+        <div>
+          <p class="eyebrow" data-i18n="admin.private">Закрытый раздел</p>
+          <h1 data-i18n="admin.title">Админ-панель</h1>
+        </div>
+        <div class="admin-actions">
+          <select id="languageSelect" class="language-select" aria-label="Язык">
+            <option value="ru">RU</option>
+            <option value="kk">KZ</option>
+          </select>
+          <button class="btn-secondary" id="adminLogoutBtn" type="button" data-i18n="admin.logout">Выйти</button>
+        </div>
+      </header>
+
+      <div class="admin-summary" id="adminSummary"></div>
+
+      <div class="admin-tabs" role="tablist" aria-label="Разделы админки" data-i18n-aria-label="admin.sections">
+        <button class="admin-tab is-active" type="button" data-admin-tab="orders" data-i18n="admin.orders">Заказы</button>
+        <button class="admin-tab" type="button" data-admin-tab="products" data-i18n="admin.products">Товары</button>
+      </div>
+
+      <section class="admin-panel" id="ordersPanel">
+        <div class="admin-toolbar">
+          <label class="field">
+            <span data-i18n="admin.search">Поиск</span>
+            <input id="adminOrderSearch" type="search" autocomplete="off" data-i18n-placeholder="admin.searchOrdersPlaceholder" placeholder="Клиент, телефон, товар" />
+          </label>
+          <label class="field">
+            <span data-i18n="admin.status">Статус</span>
+            <select id="adminOrderStatusFilter">
+              <option value="" data-i18n="filters.all">Все</option>
+            </select>
+          </label>
+          <button class="btn-secondary" id="refreshOrdersBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+        </div>
+
+        <div class="admin-notice" id="adminOrderNotice"></div>
+
+        <div class="admin-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.orderNo">Номер заказа</th>
+                <th data-i18n="admin.date">Дата</th>
+                <th data-i18n="admin.client">Клиент</th>
+                <th data-i18n="admin.address">Адрес</th>
+                <th data-i18n="admin.items">Товары</th>
+                <th data-i18n="admin.total">Сумма</th>
+                <th data-i18n="admin.status">Статус</th>
+                <th data-i18n="admin.payment">Оплата</th>
+                <th data-i18n="admin.orderSource">Источник</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <tr><td colspan="9" data-i18n="admin.noOrders">Заказов пока нет</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="productsPanel">
+        <div class="admin-toolbar">
+          <label class="field">
+            <span data-i18n="admin.search">Поиск</span>
+            <input id="adminProductSearch" type="search" autocomplete="off" data-i18n-placeholder="admin.searchProductsPlaceholder" placeholder="Бренд, название, ноты" />
+          </label>
+          <label class="field">
+            <span data-i18n="filters.brand">Бренд</span>
+            <select id="adminProductBrandFilter">
+              <option value="" data-i18n="filters.allBrands">Все бренды</option>
+            </select>
+          </label>
+          <label class="field">
+            <span data-i18n="filters.availability">Наличие</span>
+            <select id="adminProductAvailabilityFilter">
+              <option value="" data-i18n="filters.all">Все</option>
+              <option value="available" data-i18n="filters.available">В наличии</option>
+              <option value="unavailable" data-i18n="filters.unavailable">Не в наличии</option>
+            </select>
+          </label>
+          <button class="btn-secondary" id="refreshProductsBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+        </div>
+
+        <div class="admin-notice" id="adminProductNotice"></div>
+
+        <div class="admin-table-wrap">
+          <table class="orders-table admin-products-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.product">Товар</th>
+                <th data-i18n="filters.season">Сезон</th>
+                <th data-i18n="filters.gender">Пол</th>
+                <th data-i18n="filters.occasion">Повод</th>
+                <th data-i18n="admin.stock">Остаток</th>
+                <th data-i18n="admin.prices">Цены</th>
+                <th data-i18n="admin.status">Статус</th>
+                <th data-i18n="admin.actions">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <tr><td colspan="8" data-i18n="admin.noProducts">Товары не найдены</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="productEditorModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="productEditorTitle">
+    <div class="modal-content admin-editor-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="productEditorTitle" data-i18n="admin.productEditor">Редактирование товара</h2>
+        <button class="close" id="closeProductEditorBtn" type="button" aria-label="Закрыть" data-i18n-aria-label="common.close">&times;</button>
+      </div>
+      <form class="modal-body admin-product-form" id="productEditorForm">
+        <input type="hidden" id="editProductKey" />
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.basic">Основное</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="filters.brand">Бренд</span>
+              <input data-product-field="brand" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.productName">Название</span>
+              <input data-product-field="name" />
+            </label>
+            <label class="field">
+              <span data-i18n="filters.category">Категория</span>
+              <input data-product-field="category" />
+            </label>
+            <label class="field">
+              <span data-i18n="product.stockQty">Остаток</span>
+              <input data-product-field="stockQty" type="number" min="0" step="1" />
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.attributes">Параметры</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="filters.season">Сезон</span>
+              <input data-product-field="season" />
+            </label>
+            <label class="field">
+              <span data-i18n="filters.gender">Пол</span>
+              <input data-product-field="gender" />
+            </label>
+            <label class="field">
+              <span data-i18n="filters.occasion">Повод</span>
+              <input data-product-field="occasion" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.longevity">Стойкость</span>
+              <input data-product-field="longevity" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.sillage">Шлейф</span>
+              <input data-product-field="sillage" />
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.prices">Цены</h3>
+          <div class="admin-price-grid">
+            <label class="field"><span>2 мл</span><input data-product-volume="2" type="number" min="0" step="100" /></label>
+            <label class="field"><span>5 мл</span><input data-product-volume="5" type="number" min="0" step="100" /></label>
+            <label class="field"><span>10 мл</span><input data-product-volume="10" type="number" min="0" step="100" /></label>
+            <label class="field"><span>15 мл</span><input data-product-volume="15" type="number" min="0" step="100" /></label>
+            <label class="field"><span>20 мл</span><input data-product-volume="20" type="number" min="0" step="100" /></label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.descriptions">Описание</h3>
+          <div class="admin-form-grid admin-form-grid--wide">
+            <label class="field">
+              <span data-i18n="admin.shortDescription">Краткое описание</span>
+              <textarea data-product-field="description"></textarea>
+            </label>
+            <label class="field">
+              <span data-i18n="admin.fullDescription">Полное описание</span>
+              <textarea data-product-field="fullDescription"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.notes">Ноты</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="product.topNotes">Верхние</span>
+              <textarea data-product-note="top"></textarea>
+            </label>
+            <label class="field">
+              <span data-i18n="product.heartNotes">Сердце</span>
+              <textarea data-product-note="heart"></textarea>
+            </label>
+            <label class="field">
+              <span data-i18n="product.baseNotes">База</span>
+              <textarea data-product-note="base"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.image">Изображение</h3>
+          <label class="field">
+            <span data-i18n="admin.imageUrl">image_url</span>
+            <input data-product-field="imageUrl" />
+          </label>
+        </section>
+
+        <div class="admin-editor-actions">
+          <button class="btn-secondary" id="resetProductOverrideBtn" type="button" data-i18n="admin.resetLocal">Сбросить локальные правки</button>
+          <button class="btn-secondary" id="cancelProductEditBtn" type="button" data-i18n="admin.cancel">Отмена</button>
+          <button class="btn-primary" type="submit" data-i18n="admin.save">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/types.js" defer></script>
+  <script src="assets/js/modules/i18n.js" defer></script>
+  <script src="assets/js/modules/storage.js" defer></script>
+  <script src="assets/js/modules/api.js" defer></script>
+  <script src="assets/js/modules/products.js" defer></script>
+  <script src="assets/js/modules/orders.js" defer></script>
+  <script src="assets/js/modules/admin.js" defer></script>
+</body>
+</html>

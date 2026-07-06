@@ -1,0 +1,72 @@
+<!-- @dsCard group="Компоненты" name="Заказ оформлен" subtitle="Сводка заказа, Kaspi-карточка, предупреждение" width="720" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — заказ оформлен</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+
+/* стили из styles.css */
+.order-success{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:18px;align-items:start;max-width:860px;
+}
+.order-success-main{min-width:0;display:grid;gap:14px}
+.order-success-main h3,.order-payment-card h3{font-size:24px;line-height:1.2}
+.order-success-main > p:not(.eyebrow),.order-payment-card p{color:#414348}
+.order-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.order-summary-grid > div{
+  min-width:0;display:grid;gap:4px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;
+}
+.order-summary-grid span,.order-reference span{color:var(--muted);font-size:12px}
+.order-summary-grid strong{overflow-wrap:anywhere}
+.order-payment-card{display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:8px;background:#fafafa}
+.order-payment-card--kaspi{border-color:#e7c648;background:#fff9df}
+.order-reference{display:grid;gap:3px;padding:10px;border:1px dashed var(--line-strong);border-radius:8px;background:#fff}
+.order-reference strong{overflow-wrap:anywhere}
+.order-warning{
+  padding:10px 12px;border:1px solid #f0d58a;border-radius:8px;background:#fff8df;color:#7b5600;font-size:14px;
+}
+.btn-primary{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;text-decoration:none;
+}
+</style>
+</head>
+<body>
+  <div class="order-success">
+    <section class="order-success-main">
+      <p class="eyebrow">Спасибо за заказ</p>
+      <h3>Мы приняли ваш заказ</h3>
+      <div class="order-warning">Не удалось отправить заказ менеджеру автоматически. Напишите в WhatsApp и приложите номер заказа.</div>
+      <div class="order-summary-grid">
+        <div><span>Номер заказа</span><strong>LB-20260706-XK4A</strong></div>
+        <div><span>Дата</span><strong>06.07.2026, 14:32</strong></div>
+        <div><span>Статус</span><strong>Ожидает оплаты</strong></div>
+        <div><span>Сумма</span><strong>21 300 ₸</strong></div>
+      </div>
+    </section>
+    <aside class="order-payment-card order-payment-card--kaspi">
+      <p class="eyebrow">Оплата</p>
+      <h3>Ожидает Kaspi-оплаты</h3>
+      <p>Оплатите 21 300 ₸ и укажите номер заказа в комментарии к платежу.</p>
+      <div class="order-reference">
+        <span>Номер заказа</span>
+        <strong>LB-20260706-XK4A</strong>
+      </div>
+      <a class="btn-primary" href="#">Открыть Kaspi</a>
+    </aside>
+  </div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!-- @dsCard group="Разделы" name="Hero-баннер" subtitle="Заголовок, CTA, полка с флаконами" width="880" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — hero</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;
+}
+a{color:inherit;text-decoration:none}
+.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+
+/* стили из styles.css */
+.hero-banner{background:linear-gradient(180deg,#fff 0%,#f2f0ea 100%);border-bottom:1px solid var(--line)}
+.hero-inner{
+  min-height:310px;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,420px);
+  gap:32px;align-items:center;padding:28px 32px;
+}
+.hero-copy{display:grid;gap:14px;max-width:650px}
+.hero-copy h1{font-size:clamp(38px,6vw,78px);line-height:.95}
+.hero-copy p:not(.eyebrow){color:#3e4046;max-width:560px;font-size:17px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.btn-primary,.btn-secondary{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:8px;border:1px solid var(--line);background:var(--card);
+  padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;transition:.18s;
+}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:.92;transform:translateY(-1px)}
+.btn-secondary:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.hero-shelf{height:230px;display:flex;align-items:end;justify-content:center;gap:14px;overflow:hidden}
+.hero-bottle{
+  width:96px;height:150px;border:1px solid var(--line);border-radius:8px 8px 6px 6px;
+  background:linear-gradient(180deg,#fff,#e8e1d2);box-shadow:var(--shadow);
+}
+.hero-bottle--center{width:120px;height:198px;background:linear-gradient(180deg,#fff,#d9dde2)}
+</style>
+</head>
+<body>
+  <section class="hero-banner">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Нишевая парфюмерия в распиве</p>
+        <h1>La Belle</h1>
+        <p>Каталог ароматов и сетов без лишних категорий: выбирайте по бренду, объему, цене и наличию.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#">Смотреть каталог</a>
+          <a class="btn-secondary" href="#">Создать сет</a>
+        </div>
+      </div>
+      <div class="hero-shelf" aria-hidden="true">
+        <div class="hero-bottle"></div>
+        <div class="hero-bottle hero-bottle--center"></div>
+        <div class="hero-bottle"></div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

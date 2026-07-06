@@ -1,0 +1,88 @@
+<!-- @dsCard group="Компоненты" name="Корзина" subtitle="Строка товара, количество, блок «итого»" width="560" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — корзина</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button{font:inherit;color:inherit}
+.panel{max-width:480px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:0 20px;overflow:hidden}
+
+/* стили из styles.css */
+.cart-item{display:flex;justify-content:space-between;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+.cart-item:last-of-type{border-bottom:none}
+.cart-item-info{display:grid;gap:4px}
+.cart-item-name{font-weight:750}
+.cart-item-details{color:var(--muted);font-size:13px}
+.cart-item-price{font-weight:750}
+.quantity-controls{display:flex;align-items:center;gap:8px}
+.quantity-btn{min-width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.quantity-btn--remove{width:auto;padding:0 10px}
+.cart-quantity{min-width:22px;text-align:center;font-weight:750}
+.total{
+  display:grid;gap:10px;margin:18px -20px 0;padding:14px 20px;
+  border-top:1px solid var(--line);background:#fff;text-align:center;
+}
+.total-price{font-size:22px;font-weight:850}
+.total-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-primary,.btn-secondary{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:8px;border:1px solid var(--line);background:var(--card);
+  padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;transition:.18s;
+}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:.92}
+.btn-secondary:hover{border-color:var(--line-strong)}
+.btn-wa{border-color:var(--wa)}
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">Baccarat Rouge 540</div>
+        <div class="cart-item-details">Maison Francis Kurkdjian</div>
+        <div class="cart-item-details">5мл</div>
+        <div class="cart-item-price">4 500 ₸</div>
+      </div>
+      <div class="quantity-controls">
+        <button class="quantity-btn" type="button">−</button>
+        <span class="cart-quantity">2</span>
+        <button class="quantity-btn" type="button">+</button>
+        <button class="quantity-btn quantity-btn--remove" type="button">Удалить</button>
+      </div>
+    </div>
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">Кастомный сет</div>
+        <div class="cart-item-details">3 флаконов по 5мл</div>
+        <div class="cart-item-details">Baccarat Rouge 540, Layton, Althaïr</div>
+        <div class="cart-item-price">12 300 ₸</div>
+      </div>
+      <div class="quantity-controls">
+        <button class="quantity-btn" type="button">−</button>
+        <span class="cart-quantity">1</span>
+        <button class="quantity-btn" type="button">+</button>
+        <button class="quantity-btn quantity-btn--remove" type="button">Удалить</button>
+      </div>
+    </div>
+    <div class="total">
+      <div class="total-price"><span>21 300</span> ₸</div>
+      <div class="total-actions">
+        <button class="btn-secondary btn-wa" type="button">WhatsApp</button>
+        <button class="btn-primary" type="button">Оформить заказ</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

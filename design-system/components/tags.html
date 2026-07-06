@@ -1,0 +1,65 @@
+<!-- @dsCard group="Компоненты" name="Теги и бейджи" subtitle="Теги, admin-бейджи, пилюли выбранного" width="560" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — теги и бейджи</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+.demo-label{color:var(--muted);font-size:12px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.demo-label:first-child{margin-top:0}
+.demo-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* стили из styles.css */
+.tag{
+  display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:999px;
+  background:var(--chip);color:#303238;font-size:12px;
+}
+.tag--danger{color:var(--danger);background:#f8eeee}
+.admin-badge{
+  display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:999px;
+  background:var(--chip);font-size:12px;font-weight:700;
+}
+.admin-badge--ok{color:#146c2e;background:#eaf7ee}
+.admin-badge--danger{color:var(--danger);background:#f8eeee}
+.selected-pill{
+  display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:8px;
+  background:var(--chip);font-size:13px;max-width:300px;
+}
+.selected-list{display:grid;gap:8px;max-width:300px}
+</style>
+</head>
+<body>
+  <div class="demo-label">Теги товара</div>
+  <div class="demo-row">
+    <span class="tag">В наличии</span>
+    <span class="tag tag--danger">Не в наличии</span>
+    <span class="tag">2/5/10мл</span>
+    <span class="tag">Весна</span>
+    <span class="tag">Унисекс</span>
+    <span class="tag">Вечерний</span>
+  </div>
+
+  <div class="demo-label">Бейджи в админке</div>
+  <div class="demo-row">
+    <span class="admin-badge admin-badge--ok">В наличии</span>
+    <span class="admin-badge admin-badge--danger">Не в наличии</span>
+    <span class="admin-badge">Нейтральный</span>
+  </div>
+
+  <div class="demo-label">Выбранные ароматы (сет)</div>
+  <div class="selected-list">
+    <div class="selected-pill"><span>Baccarat Rouge 540</span><span>MFK</span></div>
+    <div class="selected-pill"><span>Layton</span><span>Parfums de Marly</span></div>
+  </div>
+</body>
+</html>

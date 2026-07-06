@@ -1,0 +1,57 @@
+<!-- @dsCard group="Компоненты" name="Выбор объёма" subtitle="Пилюли объёма, цена, add-to-cart" width="480" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — выбор объёма</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button{font:inherit;color:inherit}
+.demo-label{color:var(--muted);font-size:12px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.panel{max-width:360px;display:grid;gap:14px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+
+/* стили из styles.css */
+.detail-title{
+  color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+}
+.volume-options{display:flex;flex-wrap:wrap;gap:8px}
+.volume-option{
+  border:1px solid var(--line);border-radius:999px;background:var(--chip);
+  padding:8px 12px;cursor:pointer;text-align:left;
+}
+.volume-option:hover{border-color:var(--line-strong)}
+.volume-option.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.volume-price{display:block;font-size:11px;opacity:.78}
+.current-price{font-size:24px;font-weight:800}
+.add-to-cart{
+  width:100%;min-height:46px;border:0;border-radius:8px;background:var(--accent);color:#fff;
+  padding:12px 16px;cursor:pointer;font-weight:750;
+}
+.add-to-cart:hover{opacity:.93}
+</style>
+</head>
+<body>
+  <div class="demo-label">Блок выбора в модалке товара</div>
+  <div class="panel">
+    <div>
+      <div class="detail-title">Объем</div>
+      <div class="volume-options" style="margin-top:8px">
+        <button class="volume-option" type="button">2мл <span class="volume-price">1 900₸</span></button>
+        <button class="volume-option selected" type="button">5мл <span class="volume-price">4 500₸</span></button>
+        <button class="volume-option" type="button">10мл <span class="volume-price">8 700₸</span></button>
+      </div>
+    </div>
+    <div class="current-price">4 500 ₸</div>
+    <button class="add-to-cart" type="button">Добавить в корзину</button>
+  </div>
+</body>
+</html>

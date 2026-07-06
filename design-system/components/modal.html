@@ -1,0 +1,59 @@
+<!-- @dsCard group="Компоненты" name="Модальное окно" subtitle="Шапка, заголовок, кнопка закрытия" width="640" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — модальное окно</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--fg);line-height:1.55;padding:24px;
+  /* подложка модалки из styles.css: rgba(15,15,18,.55) + blur */
+  background:rgba(15,15,18,.55);
+}
+button{font:inherit;color:inherit}
+
+/* стили из styles.css (.modal-content показан статично) */
+.modal-content{
+  width:min(560px,100%);margin:0 auto;border:1px solid var(--line);border-radius:8px;background:var(--card);
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:16px 20px;border-bottom:1px solid var(--line);background:var(--card);
+}
+.modal-title{font-size:18px;font-weight:700}
+.close{
+  width:38px;height:38px;border:0;border-radius:8px;background:transparent;
+  color:var(--muted);cursor:pointer;font-size:26px;
+}
+.close:hover{background:var(--chip);color:var(--fg)}
+.modal-body{padding:20px}
+.detail-title{
+  margin:0 0 8px;color:var(--muted);font-size:12px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.detail-content{color:#303238}
+</style>
+</head>
+<body>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Детали товара</h2>
+      <button class="close" type="button" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-title">Описание</div>
+      <p class="detail-content">
+        Сияющий и чувственный аромат с нотами шафрана, амбры и кедра.
+        Подложка модалки — rgba(15,15,18,.55) с backdrop-blur 6px.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

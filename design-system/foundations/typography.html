@@ -1,0 +1,80 @@
+<!-- @dsCard group="Основы" name="Типографика" subtitle="Системный санс, заголовки, eyebrow, цены" width="720" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — типографика</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sample{display:grid;gap:4px;padding:16px 0;border-bottom:1px solid var(--line)}
+.sample:last-child{border-bottom:0}
+.spec{color:var(--muted);font-size:12px}
+
+/* стили из styles.css */
+.hero-h1{font-size:clamp(38px,6vw,78px);line-height:.95;font-weight:700}
+.section-h2{font-size:28px;line-height:1.15;font-weight:700}
+.modal-title{font-size:18px;font-weight:700}
+.body-text{color:#3e4046;max-width:560px;font-size:17px}
+.regular-text{font-size:14px;color:#414348}
+.muted-text{color:var(--muted);font-size:14px}
+.product-brand{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.product-name{font-size:16px;font-weight:700;line-height:1.25}
+.current-price{font-size:24px;font-weight:800}
+.total-price{font-size:22px;font-weight:850}
+</style>
+</head>
+<body>
+  <p class="eyebrow">La Belle · основы</p>
+
+  <div class="sample">
+    <div class="hero-h1">La Belle</div>
+    <span class="spec">Hero H1 · clamp(38px, 6vw, 78px) / 0.95 / 700</span>
+  </div>
+
+  <div class="sample">
+    <div class="section-h2">Ароматы</div>
+    <span class="spec">H2 секции · 28px / 1.15 / 700</span>
+  </div>
+
+  <div class="sample">
+    <div class="modal-title">Детали товара</div>
+    <span class="spec">Заголовок модалки · 18px / 700</span>
+  </div>
+
+  <div class="sample">
+    <p class="eyebrow">Нишевая парфюмерия в распиве</p>
+    <span class="spec">Eyebrow · 12px / 700 / uppercase / letter-spacing .08em / --muted</span>
+  </div>
+
+  <div class="sample">
+    <p class="body-text">Каталог ароматов и сетов без лишних категорий: выбирайте по бренду, объему, цене и наличию.</p>
+    <span class="spec">Lead-текст · 17px / #3e4046</span>
+  </div>
+
+  <div class="sample">
+    <p class="regular-text">Перед отправкой проверяем флакон, маркировку и качество распива.</p>
+    <span class="spec">Основной текст · 14px / #414348</span>
+  </div>
+
+  <div class="sample">
+    <div class="product-brand">Maison Francis Kurkdjian</div>
+    <div class="product-name">Baccarat Rouge 540</div>
+    <span class="spec">Бренд 12px caps + название 16px / 700</span>
+  </div>
+
+  <div class="sample">
+    <div class="current-price">12 500 ₸</div>
+    <span class="spec">Цена · 24px / 800 (итого в корзине: 22px / 850)</span>
+  </div>
+</body>
+</html>

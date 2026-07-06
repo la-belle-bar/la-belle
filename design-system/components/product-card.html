@@ -1,0 +1,76 @@
+<!-- @dsCard group="Компоненты" name="Карточка товара" subtitle="Обычная и «нет в наличии»" width="560" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — карточка товара</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+img{max-width:100%;display:block}
+
+/* стили из styles.css */
+.products-grid{display:grid;grid-template-columns:repeat(2,minmax(225px,1fr));gap:18px;max-width:520px}
+.product-card{
+  display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;
+  background:var(--card);cursor:pointer;transition:.18s;
+}
+.product-card:hover{
+  transform:translateY(-2px);border-color:var(--line-strong);box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+.product-card.is-unavailable{opacity:.68}
+.product-image{
+  width:100%;aspect-ratio:3/4;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:8px;background:#fff;color:#8b8d93;font-size:42px;object-fit:contain;
+}
+.product-meta{display:grid;gap:4px}
+.product-brand{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.product-name{font-size:16px;font-weight:700;line-height:1.25}
+.product-price-range{font-size:14px;font-weight:650}
+.product-tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{
+  display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:999px;
+  background:var(--chip);color:#303238;font-size:12px;
+}
+.tag--danger{color:var(--danger);background:#f8eeee}
+</style>
+</head>
+<body>
+  <div class="products-grid">
+    <article class="product-card">
+      <div class="product-image">🧴</div>
+      <div class="product-meta">
+        <div class="product-brand">Maison Francis Kurkdjian</div>
+        <div class="product-name">Baccarat Rouge 540</div>
+        <div class="product-price-range">от 4 500 ₸</div>
+        <div class="product-tags">
+          <span class="tag">В наличии</span>
+          <span class="tag">2/5/10мл</span>
+          <span class="tag">Унисекс</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="product-card is-unavailable">
+      <div class="product-image">🧴</div>
+      <div class="product-meta">
+        <div class="product-brand">Parfums de Marly</div>
+        <div class="product-name">Layton</div>
+        <div class="product-price-range">от 3 800 ₸</div>
+        <div class="product-tags">
+          <span class="tag tag--danger">Не в наличии</span>
+          <span class="tag">5/10мл</span>
+        </div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

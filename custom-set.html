@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'self'; object-src 'none'; form-action 'self'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <title>La Belle</title>
+  <title>La Belle - сеты</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
-<body data-page="catalog">
+<body data-page="custom-set">
   <header class="site-header">
     <div class="container header-content">
       <button class="burger-btn" id="burgerBtn" type="button" aria-label="Открыть меню" aria-controls="siteNav" aria-expanded="false" data-i18n-aria-label="nav.openMenu">
@@ -39,177 +39,96 @@
     </div>
   </header>
 
-  <main class="page-main" id="home">
-    <section class="container hero-slider-section" aria-label="Предложения La Belle">
-      <div class="hero-slider" id="heroSlider">
-        <div class="hero-slides" id="heroSlides">
-          <a class="hero-slide" href="#catalog">
-            <img src="assets/images/banners/banner-original.png" alt="Продаем оригинал доступно" />
-            <div class="hero-slide-caption">
-              <p class="eyebrow">La Belle</p>
-              <strong>Продаем оригинал доступно</strong>
-              <span>Оригинальные ароматы в распиве — по честной цене</span>
-            </div>
-          </a>
-          <a class="hero-slide" href="https://wa.me/77022266500?text=Здравствуйте! Хочу приобрести подарочный сертификат La Belle" target="_blank" rel="noopener">
-            <img src="assets/images/banners/banner-certificate.png" alt="Подарите впечатления — подарочный сертификат" loading="lazy" />
-            <div class="hero-slide-caption">
-              <p class="eyebrow">La Belle</p>
-              <strong>Подарите впечатления</strong>
-              <span>Возможность приобрести подарочный сертификат</span>
-            </div>
-          </a>
-          <a class="hero-slide" href="custom-set.html">
-            <img src="assets/images/banners/banner-sets.png" alt="Парфюмерные сеты — соберите свой сет в удобном конфигураторе" loading="lazy" />
-            <div class="hero-slide-caption">
-              <p class="eyebrow">La Belle</p>
-              <strong>Парфюмерные сеты</strong>
-              <span>Соберите свой сет в нашем удобном конфигураторе</span>
-            </div>
-          </a>
+  <main class="page-main">
+    <section class="set-hero">
+      <div class="container set-hero-inner">
+        <div>
+          <p class="eyebrow" data-i18n="sets.eyebrow">Персональный сет</p>
+          <h1 data-i18n="sets.title">Соберите набор ароматов</h1>
+          <p data-i18n="sets.copy">Выберите ароматы, объем и количество флаконов. Цена пересчитается автоматически.</p>
         </div>
-        <button class="hero-slider-arrow hero-slider-arrow--prev" type="button" aria-label="Предыдущий баннер">&lsaquo;</button>
-        <button class="hero-slider-arrow hero-slider-arrow--next" type="button" aria-label="Следующий баннер">&rsaquo;</button>
-        <div class="hero-slider-dots" id="heroSliderDots" aria-label="Переключение баннеров"></div>
+        <a class="btn-secondary" href="index.html#catalog" data-i18n="sets.backToCatalog">Вернуться в каталог</a>
       </div>
     </section>
 
-    <div class="container brand-strip">
-      <h1>La Belle</h1>
-      <p data-i18n="hero.copy">Каталог ароматов и сетов без лишних категорий: выбирайте по бренду, объему, цене и наличию.</p>
-    </div>
-
-    <section class="container catalog-section" id="catalog" aria-label="Каталог ароматов" data-i18n-aria-label="catalog.aria">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow" data-i18n="catalog.eyebrow">Каталог</p>
-          <h2 data-i18n="catalog.title">Ароматы</h2>
-        </div>
-        <div class="catalog-count" id="catalogCount" data-i18n="catalog.loading">Загрузка каталога...</div>
-      </div>
-
-      <button class="btn-secondary filters-toggle" id="catalogFiltersToggle" type="button" aria-expanded="false" aria-controls="catalogFilters" data-filters-toggle="catalogFilters" data-i18n="filters.toggle">Фильтры</button>
-      <form class="catalog-controls" id="catalogFilters">
+    <section class="container set-builder" aria-label="Создание сета" data-i18n-aria-label="sets.aria">
+      <div class="set-toolbar">
         <label class="field field--search">
           <span data-i18n="filters.search">Поиск</span>
-          <input id="searchInput" type="search" autocomplete="off" data-i18n-placeholder="filters.searchPlaceholder" placeholder="Название, бренд, ноты" />
+          <input id="customSetSearch" type="search" data-i18n-placeholder="filters.searchPlaceholder" placeholder="Название, бренд, ноты" autocomplete="off" />
         </label>
-
-        <label class="field" id="brandFilterField">
+        <label class="field" id="setBrandFilterField">
           <span data-i18n="filters.brand">Бренд</span>
-          <select id="brandFilter">
+          <select id="customSetBrandFilter">
             <option value="" data-i18n="filters.allBrands">Все бренды</option>
           </select>
         </label>
-
-        <label class="field">
-          <span data-i18n="filters.volume">Объем</span>
-          <select id="volumeFilter">
-            <option value="" data-i18n="filters.allVolumes">Все объемы</option>
-          </select>
-        </label>
-
-        <label class="field is-hidden" id="categoryFilterField">
+        <label class="field is-hidden" id="setCategoryFilterField">
           <span data-i18n="filters.category">Категория</span>
-          <select id="categoryFilter">
+          <select id="customSetCategoryFilter">
             <option value="" data-i18n="filters.allCategories">Все категории</option>
           </select>
         </label>
-
-        <label class="field is-hidden" id="seasonFilterField">
+        <label class="field is-hidden" id="setSeasonFilterField">
           <span data-i18n="filters.season">Сезон</span>
-          <select id="seasonFilter">
+          <select id="customSetSeasonFilter">
             <option value="" data-i18n="filters.allSeasons">Все сезоны</option>
           </select>
         </label>
-
-        <label class="field is-hidden" id="genderFilterField">
+        <label class="field is-hidden" id="setGenderFilterField">
           <span data-i18n="filters.gender">Пол</span>
-          <select id="genderFilter">
+          <select id="customSetGenderFilter">
             <option value="" data-i18n="filters.allGenders">Любой</option>
           </select>
         </label>
-
-        <label class="field is-hidden" id="occasionFilterField">
+        <label class="field is-hidden" id="setOccasionFilterField">
           <span data-i18n="filters.occasion">Повод</span>
-          <select id="occasionFilter">
+          <select id="customSetOccasionFilter">
             <option value="" data-i18n="filters.allOccasions">Любой повод</option>
           </select>
         </label>
-
         <label class="field">
-          <span data-i18n="filters.minPrice">Цена от</span>
-          <input id="minPriceFilter" type="number" min="0" step="100" placeholder="0" />
+          <span data-i18n="filters.volume">Объем</span>
+          <select id="customSetVolume"></select>
         </label>
-
         <label class="field">
-          <span data-i18n="filters.maxPrice">Цена до</span>
-          <input id="maxPriceFilter" type="number" min="0" step="100" placeholder="50000" />
+          <span data-i18n="sets.count">Количество</span>
+          <input class="custom-set-count" type="number" id="customSetCount" min="2" max="10" value="3" />
         </label>
-
-        <label class="field">
-          <span data-i18n="filters.availability">Наличие</span>
-          <select id="availabilityFilter">
-            <option value="available" data-i18n="filters.available">В наличии</option>
-            <option value="" data-i18n="filters.all">Все</option>
-            <option value="unavailable" data-i18n="filters.unavailable">Не в наличии</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span data-i18n="filters.sort">Сортировка</span>
-          <select id="sortSelect">
-            <option value="default" data-i18n="filters.defaultSort">По умолчанию</option>
-            <option value="price-asc" data-i18n="filters.priceAsc">Сначала дешевле</option>
-            <option value="price-desc" data-i18n="filters.priceDesc">Сначала дороже</option>
-            <option value="name-asc" data-i18n="filters.nameAsc">По названию</option>
-          </select>
-        </label>
-
-        <button class="btn-secondary control-reset" id="resetFiltersBtn" type="button" data-i18n="filters.reset">Сбросить</button>
-      </form>
-
-      <div class="products-grid" id="productsGrid">
-        <div class="skeleton-grid">
-          <div></div><div></div><div></div><div></div>
-        </div>
       </div>
-      <nav class="pagination" id="catalogPagination" aria-label="Страницы каталога" data-i18n-aria-label="pagination.catalog"></nav>
-    </section>
 
-    <section class="trust-section">
-      <div class="container trust-grid">
-        <article class="trust-item" id="about">
-          <p class="eyebrow" data-i18n="about.eyebrow">О нас</p>
-          <h2 data-i18n="about.title">Помогаем выбрать аромат без случайных покупок</h2>
-          <p data-i18n="about.copy">La Belle собирает подборку нишевых ароматов в удобных объемах. Можно взять один аромат, сравнить несколько направлений или собрать сет.</p>
-        </article>
-        <article class="trust-item" id="guarantee">
-          <p class="eyebrow" data-i18n="guarantee.eyebrow">Гарантия оригинальности</p>
-          <h2 data-i18n="guarantee.title">Работаем только с оригинальными ароматами</h2>
-          <p data-i18n="guarantee.copy">Перед отправкой проверяем флакон, маркировку и качество распива. Если позиция недоступна, она отмечается в каталоге.</p>
-        </article>
-        <article class="trust-item trust-item--contacts" id="contacts">
-          <p class="eyebrow" data-i18n="contacts.eyebrow">Контакты</p>
-          <h2 data-i18n="contacts.title">Связаться с La Belle</h2>
-          <div class="contact-actions">
-            <a class="btn-secondary btn-wa" href="https://wa.me/77022266500" target="_blank" rel="noopener">WhatsApp</a>
-            <a class="btn-secondary" href="https://www.instagram.com/la_belle_parfums/" target="_blank" rel="noopener">Instagram</a>
+      <div class="set-layout">
+        <div>
+          <div class="section-heading section-heading--compact">
+            <div>
+              <p class="eyebrow" data-i18n="sets.choice">Выбор</p>
+              <h2 data-i18n="sets.productsTitle">Ароматы для сета</h2>
+            </div>
+            <div class="catalog-count" id="setCatalogCount" data-i18n="catalog.loading">Загрузка...</div>
           </div>
-        </article>
+          <div class="custom-set-grid custom-set-grid--page" id="customSetGrid">
+            <div class="skeleton-grid">
+              <div></div><div></div><div></div>
+            </div>
+          </div>
+          <nav class="pagination" id="setPagination" aria-label="Страницы ароматов" data-i18n-aria-label="pagination.set"></nav>
+        </div>
+
+        <aside class="set-summary" aria-label="Итог сета" data-i18n-aria-label="sets.summary">
+          <div>
+            <p class="eyebrow" data-i18n="sets.summaryEyebrow">Итог</p>
+            <h2 data-i18n="sets.yourSet">Ваш сет</h2>
+          </div>
+          <div class="selected-list" id="customSetSelected">
+            <div class="empty-state empty-state--compact" data-i18n="sets.empty">Выберите ароматы</div>
+          </div>
+          <div class="current-price" id="customSetPrice" aria-live="polite"></div>
+          <button class="add-to-cart" id="addCustomSetBtn" type="button" disabled data-i18n="cart.add">Добавить в корзину</button>
+          <button class="btn-secondary" id="clearCustomSetBtn" type="button" data-i18n="sets.clear">Очистить выбор</button>
+        </aside>
       </div>
     </section>
   </main>
-
-  <div id="productModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="productModalTitle" data-i18n="product.details">Детали товара</h2>
-        <button class="close" id="closeProductModalBtn" type="button" aria-label="Закрыть" data-i18n-aria-label="common.close">&times;</button>
-      </div>
-      <div class="modal-body" id="productModalBody"></div>
-    </div>
-  </div>
 
   <div id="cartModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cartModalTitle">
     <div class="modal-content">
@@ -310,7 +229,6 @@
   <script src="assets/js/modules/i18n.js" defer></script>
   <script src="assets/js/modules/storage.js" defer></script>
   <script src="assets/js/modules/api.js" defer></script>
-  <script src="assets/js/modules/slider.js" defer></script>
   <script src="assets/js/modules/kz-cities.js" defer></script>
   <script src="assets/js/modules/products.js" defer></script>
   <script src="assets/js/modules/cart.js" defer></script>

@@ -1,0 +1,87 @@
+<!-- @dsCard group="Компоненты" name="Формы и фильтры" subtitle="Поля, select, textarea, панель фильтров" width="720" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — формы</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button,input,select,textarea{font:inherit}
+button{color:inherit}
+.demo-label{color:var(--muted);font-size:12px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.demo-label:first-child{margin-top:0}
+
+/* стили из styles.css */
+.field{display:grid;gap:6px;min-width:0}
+.field span,label{color:var(--muted);font-size:12px}
+input,select,textarea{
+  width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;
+  padding:10px 12px;font-size:14px;
+}
+textarea{min-height:76px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+.catalog-controls{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;
+  padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff;
+}
+.btn-secondary{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:8px;border:1px solid var(--line);background:var(--card);
+  padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;transition:.18s;
+}
+.btn-secondary:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.control-reset{height:42px}
+.checkout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:560px}
+.checkout-grid .full{grid-column:1/-1}
+</style>
+</head>
+<body>
+  <div class="demo-label">Панель фильтров каталога</div>
+  <form class="catalog-controls">
+    <label class="field">
+      <span>Поиск</span>
+      <input type="search" placeholder="Название, бренд, ноты" />
+    </label>
+    <label class="field">
+      <span>Бренд</span>
+      <select><option>Все бренды</option><option>Maison Francis Kurkdjian</option></select>
+    </label>
+    <label class="field">
+      <span>Объем</span>
+      <select><option>Все объемы</option><option>5мл</option><option>10мл</option></select>
+    </label>
+    <label class="field">
+      <span>Цена от</span>
+      <input type="number" placeholder="0" />
+    </label>
+    <button class="btn-secondary control-reset" type="button">Сбросить</button>
+  </form>
+
+  <div class="demo-label">Форма оформления заказа</div>
+  <div class="checkout-grid">
+    <div>
+      <label for="name">Имя</label>
+      <input id="name" placeholder="Как к вам обращаться" />
+    </div>
+    <div>
+      <label for="phone">Телефон</label>
+      <input id="phone" placeholder="+7 7XX XXX XX XX" />
+    </div>
+    <div class="full">
+      <label for="comment">Комментарий</label>
+      <textarea id="comment" placeholder="Подъезд/этаж/код домофона и любые пожелания"></textarea>
+    </div>
+  </div>
+</body>
+</html>

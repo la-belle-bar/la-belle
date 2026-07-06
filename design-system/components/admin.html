@@ -1,0 +1,99 @@
+<!-- @dsCard group="Админка" name="Компоненты админки" subtitle="Статистика, вкладки, таблица, уведомления" width="880" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — админка</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button,select{font:inherit;color:inherit}
+.demo-label{color:var(--muted);font-size:12px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.demo-label:first-child{margin-top:0}
+
+/* стили из styles.css */
+.admin-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:820px}
+.admin-stat{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.admin-stat span{color:var(--muted);font-size:12px}
+.admin-stat strong{font-size:24px;line-height:1.1}
+.admin-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.admin-tab{
+  min-height:40px;border:1px solid var(--line);border-radius:8px;background:#fff;
+  padding:9px 14px;cursor:pointer;font-weight:700;
+}
+.admin-tab.is-active{border-color:var(--accent);background:var(--accent);color:#fff}
+.admin-notice{min-height:22px;color:var(--muted);font-size:14px}
+.admin-notice[data-tone="danger"]{color:var(--danger)}
+.admin-notice[data-tone="warning"]{color:#8a5b00}
+.admin-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;max-width:820px}
+.orders-table{width:100%;min-width:640px;border-collapse:collapse;font-size:14px}
+.orders-table th,.orders-table td{
+  padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;
+}
+.orders-table th{
+  background:var(--chip);color:#303238;font-size:12px;text-transform:uppercase;letter-spacing:.04em;
+}
+.admin-muted{color:var(--muted);font-size:12px}
+.admin-badge{
+  display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:999px;
+  background:var(--chip);font-size:12px;font-weight:700;
+}
+.admin-badge--ok{color:#146c2e;background:#eaf7ee}
+.order-status-select{
+  min-width:150px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px 12px;font-size:14px;
+}
+</style>
+</head>
+<body>
+  <div class="demo-label">Сводка</div>
+  <div class="admin-summary">
+    <div class="admin-stat"><span>Заказы</span><strong>42</strong></div>
+    <div class="admin-stat"><span>Ожидает оплаты</span><strong>3</strong></div>
+    <div class="admin-stat"><span>Сумма</span><strong>486 200 ₸</strong></div>
+    <div class="admin-stat"><span>В наличии</span><strong>118</strong></div>
+  </div>
+
+  <div class="demo-label">Вкладки</div>
+  <div class="admin-tabs">
+    <button class="admin-tab is-active" type="button">Заказы</button>
+    <button class="admin-tab" type="button">Товары</button>
+  </div>
+
+  <div class="demo-label">Уведомления</div>
+  <div class="admin-notice">Изменения записаны в таблицу и сохранены локально.</div>
+  <div class="admin-notice" data-tone="warning">Статус сохранён локально, но не записан в таблицу.</div>
+  <div class="admin-notice" data-tone="danger">Не удалось загрузить данные</div>
+
+  <div class="demo-label">Таблица заказов</div>
+  <div class="admin-table-wrap">
+    <table class="orders-table">
+      <thead>
+        <tr><th>Номер</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Наличие</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>LB-20260706-XK4A</strong></td>
+          <td>Алия<br><span class="admin-muted">+7 702 226 65 00</span></td>
+          <td>21 300 ₸</td>
+          <td>
+            <select class="order-status-select">
+              <option>Новый</option>
+              <option selected>Ожидает оплаты</option>
+              <option>Оплачен</option>
+            </select>
+          </td>
+          <td><span class="admin-badge admin-badge--ok">В наличии</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

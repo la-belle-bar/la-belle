@@ -1,0 +1,47 @@
+<!-- @dsCard group="Компоненты" name="Пагинация" subtitle="Стрелки, текущая страница, многоточие" width="480" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — пагинация</title>
+<style>
+:root{
+  --bg:#f7f7f8; --fg:#0b0b0c; --muted:#686a70; --line:#e3e4e8; --line-strong:#d2d4da;
+  --card:#ffffff; --chip:#f1f2f4; --accent:#111111; --accent-soft:#ece8df;
+  --wa:#25D366; --danger:#a23b3b; --shadow:0 12px 32px rgba(12,14,18,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+button{font:inherit;color:inherit}
+
+/* стили из styles.css */
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px}
+.pagination-pages{display:flex;align-items:center;gap:6px}
+.pagination-btn{
+  width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:8px;background:#fff;color:var(--fg);cursor:pointer;font-weight:700;
+}
+.pagination-btn:hover:not(:disabled){border-color:var(--line-strong);background:var(--chip)}
+.pagination-btn.is-current{border-color:var(--accent);background:var(--accent);color:#fff}
+.pagination-btn:disabled{cursor:not-allowed;opacity:.4}
+.pagination-btn--arrow{font-size:24px;font-weight:500}
+.pagination-ellipsis{width:24px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+  <nav class="pagination" aria-label="Страницы каталога">
+    <button class="pagination-btn pagination-btn--arrow" type="button" disabled>&lsaquo;</button>
+    <div class="pagination-pages">
+      <button class="pagination-btn is-current" type="button" aria-current="page">1</button>
+      <button class="pagination-btn" type="button">2</button>
+      <button class="pagination-btn" type="button">3</button>
+      <span class="pagination-ellipsis" aria-hidden="true">...</span>
+      <button class="pagination-btn" type="button">12</button>
+    </div>
+    <button class="pagination-btn pagination-btn--arrow" type="button">&rsaquo;</button>
+  </nav>
+</body>
+</html>
