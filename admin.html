@@ -31,6 +31,7 @@
           <h1 data-i18n="admin.title">Админ-панель</h1>
         </div>
         <div class="admin-actions">
+          <span class="admin-role-badge" id="adminRoleLabel"></span>
           <select id="languageSelect" class="language-select" aria-label="Язык">
             <option value="ru">RU</option>
             <option value="kk">KZ</option>
@@ -44,6 +45,11 @@
       <div class="admin-tabs" role="tablist" aria-label="Разделы админки" data-i18n-aria-label="admin.sections">
         <button class="admin-tab is-active" type="button" data-admin-tab="orders" data-i18n="admin.orders">Заказы</button>
         <button class="admin-tab" type="button" data-admin-tab="products" data-i18n="admin.products">Товары</button>
+        <button class="admin-tab" type="button" data-admin-tab="reviews" data-i18n="admin.reviews">Отзывы</button>
+        <button class="admin-tab" type="button" data-admin-tab="customers" data-i18n="admin.customers">Клиенты</button>
+        <button class="admin-tab is-hidden" type="button" data-admin-tab="analytics" data-i18n="admin.analytics">Аналитика</button>
+        <button class="admin-tab is-hidden" type="button" data-admin-tab="log" data-i18n="admin.log">Журнал</button>
+        <button class="admin-tab is-hidden" type="button" data-admin-tab="settings" data-i18n="admin.settings">Настройки</button>
       </div>
 
       <section class="admin-panel" id="ordersPanel">
@@ -126,6 +132,106 @@
             </thead>
             <tbody id="productsTableBody">
               <tr><td colspan="8" data-i18n="admin.noProducts">Товары не найдены</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="reviewsPanel">
+        <div class="admin-toolbar admin-toolbar--simple">
+          <div class="admin-muted" data-i18n="admin.reviewsHint">Отзывы публикуются на сайте только после одобрения.</div>
+          <button class="btn-secondary" id="refreshReviewsBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+        </div>
+        <div class="admin-notice" id="adminReviewNotice"></div>
+        <div class="admin-table-wrap">
+          <table class="orders-table admin-reviews-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.date">Дата</th>
+                <th data-i18n="admin.client">Клиент</th>
+                <th data-i18n="admin.reviewText">Отзыв</th>
+                <th data-i18n="admin.status">Статус</th>
+                <th data-i18n="admin.actions">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="reviewsTableBody">
+              <tr><td colspan="5" data-i18n="admin.noReviews">Отзывов пока нет</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="analyticsPanel">
+        <div class="admin-summary" id="analyticsCards"></div>
+        <div class="analytics-grid">
+          <div class="analytics-block">
+            <h3 class="analytics-title" data-i18n="analytics.top">Топ ароматов поштучно</h3>
+            <div class="analytics-top" id="analyticsTop"></div>
+          </div>
+          <div class="analytics-block">
+            <h3 class="analytics-title" data-i18n="analytics.topSets">Топ ароматов в сетах</h3>
+            <div class="analytics-top" id="analyticsTopSets"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="customersPanel">
+        <div class="admin-toolbar admin-toolbar--simple">
+          <div class="admin-muted" data-i18n="admin.customersHint">База лояльности: телефон — ключ клиента, баллы начисляются при оплате.</div>
+          <button class="btn-secondary" id="refreshCustomersBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+        </div>
+        <div class="admin-notice" id="adminCustomerNotice"></div>
+        <div class="admin-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.client">Клиент</th>
+                <th data-i18n="admin.phone">Телефон</th>
+                <th data-i18n="account.points">Баллы</th>
+                <th data-i18n="account.totalSpent">Потрачено</th>
+                <th data-i18n="admin.lastOrder">Последний заказ</th>
+              </tr>
+            </thead>
+            <tbody id="customersTableBody">
+              <tr><td colspan="5" data-i18n="admin.noCustomers">Клиентов пока нет</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="settingsPanel">
+        <div class="admin-settings-card">
+          <h3 class="analytics-title" data-i18n="admin.loyaltySettings">Бонусная программа</h3>
+          <label class="field">
+            <span data-i18n="admin.loyaltyPercent">Кэшбэк, % от суммы оплаченного заказа</span>
+            <input id="settingsEarnPercent" type="number" min="0" max="100" step="0.5" />
+          </label>
+          <div class="admin-muted" data-i18n="admin.loyaltyHint">1 балл = 1 ₸ при списании. 0 — начисление выключено.</div>
+          <div class="admin-settings-actions">
+            <button class="btn-primary" id="saveSettingsBtn" type="button" data-i18n="admin.save">Сохранить</button>
+            <span class="admin-notice" id="adminSettingsNotice"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="logPanel">
+        <div class="admin-toolbar admin-toolbar--simple">
+          <div class="admin-muted" data-i18n="admin.logHint">Журнал изменений из админки: заказы, товары, отзывы.</div>
+          <button class="btn-secondary" id="refreshLogBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+        </div>
+        <div class="admin-notice" id="adminLogNotice"></div>
+        <div class="admin-table-wrap">
+          <table class="orders-table admin-log-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.date">Дата</th>
+                <th data-i18n="admin.role">Роль</th>
+                <th data-i18n="admin.logActionCol">Действие</th>
+                <th data-i18n="admin.logTarget">Объект</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <tr><td colspan="4" data-i18n="admin.noLog">Записей пока нет</td></tr>
             </tbody>
           </table>
         </div>
@@ -254,6 +360,8 @@
   <script src="assets/js/types.js" defer></script>
   <script src="assets/js/modules/i18n.js" defer></script>
   <script src="assets/js/modules/storage.js" defer></script>
+  <script src="assets/js/modules/favorites.js" defer></script>
+  <script src="assets/js/modules/reviews.js" defer></script>
   <script src="assets/js/modules/api.js" defer></script>
   <script src="assets/js/modules/products.js" defer></script>
   <script src="assets/js/modules/orders.js" defer></script>

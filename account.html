@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'self'; object-src 'none'; form-action 'self'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>La Belle — Кабинет</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body data-page="account">
+  <header class="site-header">
+    <div class="container header-content">
+      <button class="burger-btn" id="burgerBtn" type="button" aria-label="Открыть меню" aria-controls="siteNav" aria-expanded="false" data-i18n-aria-label="nav.openMenu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a class="logo" href="index.html" aria-label="La Belle">La Belle</a>
+
+      <nav class="site-nav" id="siteNav" aria-label="Основное меню" data-i18n-aria-label="nav.main">
+        <a href="index.html#home" data-i18n="nav.home">Главная</a>
+        <a href="index.html#catalog" data-i18n="nav.catalog">Каталог</a>
+        <a href="custom-set.html" data-i18n="nav.sets">Сеты</a>
+        <a href="account.html" data-i18n="nav.account">Кабинет</a>
+      </nav>
+
+      <div class="header-actions">
+        <label class="language-field" for="languageSelect">
+          <span data-i18n="nav.language">Язык</span>
+          <select id="languageSelect" class="language-select" aria-label="Язык" data-i18n-aria-label="nav.language">
+            <option value="ru">RU</option>
+            <option value="kk">KZ</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main container account-main">
+    <section class="account-login" id="accountLogin">
+      <div class="account-login-panel">
+        <p class="eyebrow" data-i18n="account.eyebrow">Личный кабинет</p>
+        <h1 data-i18n="account.title">Вход по телефону</h1>
+        <p class="account-login-hint" data-i18n="account.hint">Войдите по номеру телефона и номеру любого своего заказа (он есть в подтверждении заказа).</p>
+        <label class="field">
+          <span data-i18n="checkout.phone">Телефон</span>
+          <input id="accPhone" type="tel" autocomplete="tel" placeholder="+7 7XX XXX XX XX" />
+        </label>
+        <label class="field">
+          <span data-i18n="account.orderId">Номер заказа</span>
+          <input id="accOrderId" type="text" autocomplete="off" placeholder="LB-..." />
+        </label>
+        <button class="btn-primary" id="accountLoginBtn" type="button" data-i18n="account.login">Войти</button>
+        <div class="account-error" id="accountError"></div>
+      </div>
+    </section>
+
+    <section class="account-view is-hidden" id="accountView">
+      <div class="account-head">
+        <div>
+          <p class="eyebrow" data-i18n="account.eyebrow">Личный кабинет</p>
+          <h1 id="accountName" data-i18n="account.title">Личный кабинет</h1>
+        </div>
+        <button class="btn-secondary" id="accountLogoutBtn" type="button" data-i18n="account.logout">Выйти</button>
+      </div>
+
+      <div class="account-stats" id="accountStats"></div>
+
+      <h2 class="account-orders-title" data-i18n="account.orders">История заказов</h2>
+      <div class="account-orders" id="accountOrders"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <a class="logo" href="index.html">La Belle</a>
+        <div class="socials">
+          <a href="https://wa.me/77022266500" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="https://www.instagram.com/la_belle_parfums/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© <span id="yearSpan"></span> La Belle. <span data-i18n="footer.rights">Все права защищены.</span></div>
+        <div data-i18n="footer.tagline">Нишевая парфюмерия в распиве</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/types.js" defer></script>
+  <script src="assets/js/modules/i18n.js" defer></script>
+  <script src="assets/js/modules/storage.js" defer></script>
+  <script src="assets/js/modules/api.js" defer></script>
+  <script src="assets/js/modules/account.js" defer></script>
+</body>
+</html>

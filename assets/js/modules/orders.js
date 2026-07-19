@@ -123,6 +123,7 @@
       customer:{
         name:row.name || '',
         phone:row.phone || '',
+        email:row.email || '',
         city:row.city || '',
         street:row.street || '',
         house:row.house || '',
@@ -134,10 +135,15 @@
         name:item.name || '',
         brand:item.brand || '',
         description:item.description || '',
+        type:item.type || 'product',
         quantity:Number(item.quantity || 1),
         price:Number(item.price || 0),
         total:Number(item.total || 0)
       })),
+      subtotal:toInt(row.subtotal),
+      discount:toInt(row.discount),
+      pointsRedeemed:toInt(row.points_redeemed),
+      promoCode:row.promo_code || '',
       total:toInt(row.total),
       payment:{
         method:row.payment_method || '-',
@@ -179,11 +185,16 @@
         timestamp: order.createdAt,
         name: order.customer.name,
         phone: order.customer.phone,
+        email: order.customer.email || '',
         city: order.customer.city,
         street: order.customer.street,
         house: order.customer.house,
         flat: order.customer.flat,
         comment: order.customer.comment,
+        subtotal: order.subtotal,
+        discount: order.discount,
+        promo_code: order.promoCode || '',
+        redeem_points: order.redeemPoints || 0,
         total: order.total,
         status: order.status,
         payment_method: order.payment.method,
@@ -194,8 +205,13 @@
     return app.api.post(payload);
   }
 
-  function buildOrder({customer, items, total, payment}){
+  function buildOrder({customer, items, total, payment, subtotal, discount, promoCode, pointsRedeemed, redeemPoints}){
     const status = app.payments.getOrderStatusForPayment(payment);
+    const computedSubtotal = subtotal != null
+      ? subtotal
+      : items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const appliedDiscount = Math.max(0, Number(discount) || 0);
+    const appliedPoints = Math.max(0, Number(pointsRedeemed) || 0);
     return {
       id:makeOrderId(),
       createdAt:new Date().toISOString(),
@@ -205,11 +221,17 @@
         name:item.name,
         brand:item.brand,
         description:item.description,
+        type:item.type || 'product',
         quantity:item.quantity,
         price:item.price,
         total:item.price * item.quantity
       })),
-      total,
+      subtotal:computedSubtotal,
+      discount:appliedDiscount,
+      pointsRedeemed:appliedPoints,
+      redeemPoints:Math.max(0, Number(redeemPoints) || 0),
+      promoCode:promoCode || '',
+      total:total != null ? total : Math.max(0, computedSubtotal - appliedDiscount - appliedPoints),
       payment,
       status
     };

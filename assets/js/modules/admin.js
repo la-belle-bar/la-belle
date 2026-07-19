@@ -3,14 +3,35 @@
 
   const app = window.LaBelle = window.LaBelle || {};
   const statuses = ['new','awaiting_payment','paid','processing','completed','cancelled'];
+  const SS_ROLE_KEY = 'lb_admin_role_v1';
+  const OWNER_ONLY_TABS = ['analytics','log','settings'];
+  const PANELS = {orders:'ordersPanel', products:'productsPanel', reviews:'reviewsPanel', customers:'customersPanel', analytics:'analyticsPanel', log:'logPanel', settings:'settingsPanel'};
 
   const state = {
     activeTab:'orders',
+    role:'',
     orders:[],
     products:[],
+    reviews:[],
+    customers:[],
+    log:[],
     orderFilters:{search:'', status:''},
     productFilters:{search:'', brand:'', availability:''}
   };
+
+  function getRole(){
+    try{ return sessionStorage.getItem(SS_ROLE_KEY) || ''; }catch(_){ return ''; }
+  }
+
+  function setRole(role){
+    state.role = role || '';
+    try{
+      if(role) sessionStorage.setItem(SS_ROLE_KEY, role);
+      else sessionStorage.removeItem(SS_ROLE_KEY);
+    }catch(_){}
+  }
+
+  function isOwner(){ return state.role === 'owner'; }
 
   // «Вход» здесь — только UX. Реальная проверка ключа происходит в Apps Script
   // на каждом запросе; без верного ключа сервер не отдаст и не примет ничего.
@@ -66,19 +87,73 @@
     `;
   }
 
+  function applyRole(){
+    const owner = isOwner();
+    OWNER_ONLY_TABS.forEach(tab => {
+      app.dom.all(`[data-admin-tab="${tab}"]`).forEach(button => button.classList.toggle('is-hidden', !owner));
+    });
+    // Менеджер не должен зависнуть на owner-вкладке.
+    if(!owner && OWNER_ONLY_TABS.includes(state.activeTab)) state.activeTab = 'orders';
+    const roleLabel = app.dom.byId('adminRoleLabel');
+    if(roleLabel) roleLabel.textContent = state.role ? app.i18n.t(`admin.role.${state.role}`) : '';
+  }
+
   function setTab(tab){
+    if(OWNER_ONLY_TABS.includes(tab) && !isOwner()) return;
     state.activeTab = tab;
     app.dom.all('[data-admin-tab]').forEach(button => {
       button.classList.toggle('is-active', button.dataset.adminTab === tab);
     });
-    app.dom.byId('ordersPanel')?.classList.toggle('is-hidden', tab !== 'orders');
-    app.dom.byId('productsPanel')?.classList.toggle('is-hidden', tab !== 'products');
+    Object.entries(PANELS).forEach(([name, id]) => {
+      app.dom.byId(id)?.classList.toggle('is-hidden', name !== tab);
+    });
+    if(tab === 'reviews' && !state.reviews.length) loadReviewsAdmin();
+    if(tab === 'customers' && !state.customers.length) loadCustomers();
+    if(tab === 'analytics') renderAnalytics();
+    if(tab === 'log') loadLog();
+    if(tab === 'settings') loadSettings();
   }
 
-  function showShell(){
+  async function loadSettings(){
+    const input = app.dom.byId('settingsEarnPercent');
+    try{
+      const data = await app.api.get({action:'settings', token:app.api.getAdminToken()});
+      if(data.ok && input) input.value = data.earn_percent;
+    }catch(err){ console.warn('Settings load failed:', err); }
+  }
+
+  async function saveSettings(){
+    const input = app.dom.byId('settingsEarnPercent');
+    const notice = app.dom.byId('adminSettingsNotice');
+    if(notice){ notice.textContent = ''; notice.dataset.tone = 'muted'; }
+    try{
+      const data = await app.api.post({action:'update_settings', token:app.api.getAdminToken(), earn_percent:Number(input?.value)});
+      if(!data.ok) throw new Error(data.error || 'save_failed');
+      if(input) input.value = data.earn_percent;
+      if(notice){ notice.textContent = app.i18n.t('admin.settingsSaved'); notice.dataset.tone = 'ok'; }
+    }catch(err){
+      console.warn('Settings save failed:', err);
+      if(notice){ notice.textContent = app.i18n.t('admin.saveFailed'); notice.dataset.tone = 'danger'; }
+    }
+  }
+
+  async function ensureRole(){
+    let role = getRole();
+    if(!role){
+      try{
+        const result = await app.api.get({action:'verify', token:app.api.getAdminToken()});
+        if(result.ok) role = result.role || 'owner';
+      }catch(_){}
+    }
+    setRole(role);
+  }
+
+  async function showShell(){
     app.dom.byId('adminLogin')?.classList.add('is-hidden');
     app.dom.byId('adminShell')?.classList.remove('is-hidden');
     renderStatusOptions(app.dom.byId('adminOrderStatusFilter'), true);
+    await ensureRole();
+    applyRole();
     setTab(state.activeTab);
     loadAdminData();
   }
@@ -135,7 +210,7 @@
         <tr>
           <td><strong>${esc(order.id)}</strong></td>
           <td>${formatDate(order.createdAt)}</td>
-          <td>${esc(customer.name || '-')}<br><span class="admin-muted">${esc(customer.phone || '-')}</span></td>
+          <td>${esc(customer.name || '-')}<br><span class="admin-muted">${esc(customer.phone || '-')}</span>${customer.email ? `<br><span class="admin-muted">${esc(customer.email)}</span>` : ''}</td>
           <td>${address || '-'}</td>
           <td>${renderOrderItems(order) || '-'}</td>
           <td>${app.dom.rub(order.total || 0)} ₸</td>
@@ -235,6 +310,199 @@
 
   async function loadAdminData(){
     await Promise.all([loadOrders(), loadProducts()]);
+    if(state.activeTab === 'analytics') renderAnalytics();
+  }
+
+  /* ── Отзывы (модерация) ──────────────────────────────────────────────── */
+
+  function reviewStatusLabel(status){
+    return app.i18n.t(`admin.reviewStatus.${status}`) || status;
+  }
+
+  function renderReviews(){
+    const body = app.dom.byId('reviewsTableBody');
+    if(!body) return;
+    if(!state.reviews.length){
+      body.innerHTML = `<tr><td colspan="5">${app.i18n.t('admin.noReviews')}</td></tr>`;
+      return;
+    }
+    body.innerHTML = state.reviews.map(review => `
+      <tr>
+        <td>${formatDate(review.timestamp)}</td>
+        <td>${esc(review.name || '-')}<br><span class="admin-muted">${esc(review.product_key)}</span></td>
+        <td>${'★'.repeat(Math.max(0, Math.min(5, review.rating)))}<br><span class="review-cell-text">${esc(review.text)}</span></td>
+        <td><span class="admin-badge admin-badge--${review.status === 'approved' ? 'ok' : review.status === 'rejected' ? 'danger' : 'muted'}">${esc(reviewStatusLabel(review.status))}</span></td>
+        <td>
+          <div class="admin-inline-actions">
+            <button class="btn-secondary" type="button" data-review-action="approved" data-review-id="${esc(review.review_id)}" ${review.status === 'approved' ? 'disabled' : ''}>${app.i18n.t('admin.approve')}</button>
+            <button class="btn-secondary" type="button" data-review-action="rejected" data-review-id="${esc(review.review_id)}" ${review.status === 'rejected' ? 'disabled' : ''}>${app.i18n.t('admin.reject')}</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadReviewsAdmin(){
+    const notice = app.dom.byId('adminReviewNotice');
+    try{
+      const data = await app.api.get({action:'reviews_admin', token:app.api.getAdminToken()});
+      state.reviews = data.ok && Array.isArray(data.rows) ? data.rows : [];
+      if(notice) notice.textContent = '';
+    }catch(err){
+      console.warn('Reviews load failed:', err);
+      if(notice){ notice.textContent = `${app.i18n.t('admin.loadError')}: ${err.message}`; notice.dataset.tone = 'danger'; }
+    }
+    renderReviews();
+  }
+
+  async function moderateReview(reviewId, status){
+    const notice = app.dom.byId('adminReviewNotice');
+    if(notice){ notice.textContent = ''; notice.dataset.tone = 'muted'; }
+    try{
+      const res = await app.api.post({action:'moderate_review', token:app.api.getAdminToken(), review_id:reviewId, status});
+      if(!res.ok) throw new Error(res.error || 'moderate_failed');
+      const review = state.reviews.find(item => item.review_id === reviewId);
+      if(review) review.status = status;
+      renderReviews();
+    }catch(err){
+      console.warn('Moderate review failed:', err);
+      if(notice){ notice.textContent = app.i18n.t('admin.moderateFailed'); notice.dataset.tone = 'danger'; }
+    }
+  }
+
+  /* ── Клиенты (база лояльности) ───────────────────────────────────────── */
+
+  function renderCustomers(){
+    const body = app.dom.byId('customersTableBody');
+    if(!body) return;
+    if(!state.customers.length){
+      body.innerHTML = `<tr><td colspan="5">${app.i18n.t('admin.noCustomers')}</td></tr>`;
+      return;
+    }
+    body.innerHTML = state.customers.map(c => `
+      <tr>
+        <td>${esc(c.name || '-')}</td>
+        <td>${esc(c.phone || '-')}</td>
+        <td>${app.dom.rub(c.points || 0)}</td>
+        <td>${app.dom.rub(c.total_spent || 0)} ₸<br><span class="admin-muted">${c.orders_count || 0}</span></td>
+        <td>${c.last_order ? formatDate(c.last_order) : '-'}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadCustomers(){
+    const notice = app.dom.byId('adminCustomerNotice');
+    try{
+      const data = await app.api.get({action:'customers_admin', token:app.api.getAdminToken()});
+      state.customers = data.ok && Array.isArray(data.rows) ? data.rows : [];
+      if(notice) notice.textContent = '';
+    }catch(err){
+      console.warn('Customers load failed:', err);
+      if(notice){ notice.textContent = `${app.i18n.t('admin.loadError')}: ${err.message}`; notice.dataset.tone = 'danger'; }
+    }
+    renderCustomers();
+  }
+
+  /* ── Аналитика (считаем из уже загруженных заказов) ──────────────────── */
+
+  // Строка заказа считается сетом по type='custom-set' или (для старых заказов
+  // без type) по названию кастомного сета в обоих языках.
+  const SET_NAMES = ['кастомный сет','жеке сет'];
+  function isSetItem(item){
+    if(item.type === 'custom-set') return true;
+    return SET_NAMES.includes(String(item.name || '').trim().toLowerCase());
+  }
+
+  function topBars(counter){
+    const top = Array.from(counter.entries()).sort((a,b) => b[1] - a[1]).slice(0, 8);
+    const max = top.length ? top[0][1] : 1;
+    return top.length
+      ? top.map(([name, count]) => `
+          <div class="analytics-bar">
+            <div class="analytics-bar-head"><span>${esc(name)}</span><span>${count}</span></div>
+            <div class="analytics-bar-track"><div class="analytics-bar-fill" style="width:${Math.round(count / max * 100)}%"></div></div>
+          </div>`).join('')
+      : `<div class="empty-state empty-state--compact">${app.i18n.t('admin.noOrders')}</div>`;
+  }
+
+  function renderAnalytics(){
+    const cardsEl = app.dom.byId('analyticsCards');
+    const topEl = app.dom.byId('analyticsTop');
+    const topSetsEl = app.dom.byId('analyticsTopSets');
+    if(!cardsEl || !topEl) return;
+    const orders = state.orders;
+    const paidStatuses = ['paid','completed'];
+    const paid = orders.filter(order => paidStatuses.includes(order.status));
+    const revenue = paid.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const avgCheck = paid.length ? Math.round(revenue / paid.length) : 0;
+    const conversion = orders.length ? Math.round((paid.length / orders.length) * 100) : 0;
+
+    // Разделяем позиции: поштучные ароматы и сеты.
+    const singleCounter = new Map();   // brand · name -> шт
+    const inSetCounter = new Map();     // name -> сколько раз встречается в сетах
+    let setLines = 0;
+    orders.forEach(order => (order.items || []).forEach(item => {
+      const qty = Number(item.quantity || 1);
+      if(isSetItem(item)){
+        setLines += qty;
+        // Состав сета лежит в description: названия ароматов через запятую.
+        String(item.description || '').split(',').map(part => part.trim()).filter(Boolean).forEach(name => {
+          inSetCounter.set(name, (inSetCounter.get(name) || 0) + qty);
+        });
+      }else{
+        const name = `${item.brand ? item.brand + ' · ' : ''}${item.name || ''}`.trim();
+        if(name) singleCounter.set(name, (singleCounter.get(name) || 0) + qty);
+      }
+    }));
+    const singleUnits = Array.from(singleCounter.values()).reduce((a, b) => a + b, 0);
+
+    cardsEl.innerHTML = [
+      {label:app.i18n.t('analytics.revenue'), value:`${app.dom.rub(revenue)} ₸`, sub:app.i18n.t('analytics.revenueSub')},
+      {label:app.i18n.t('analytics.avgCheck'), value:`${app.dom.rub(avgCheck)} ₸`, sub:app.i18n.t('analytics.paidCount', {count:paid.length})},
+      {label:app.i18n.t('analytics.conversion'), value:`${conversion}%`, sub:app.i18n.t('analytics.conversionSub')},
+      {label:app.i18n.t('analytics.orders'), value:orders.length, sub:app.i18n.t('analytics.ordersSub')},
+      {label:app.i18n.t('analytics.singleUnits'), value:singleUnits, sub:app.i18n.t('analytics.singleUnitsSub')},
+      {label:app.i18n.t('analytics.setLines'), value:setLines, sub:app.i18n.t('analytics.setLinesSub')}
+    ].map(card => `<div class="admin-stat"><span>${card.label}</span><strong>${card.value}</strong><span class="admin-muted">${card.sub}</span></div>`).join('');
+
+    topEl.innerHTML = topBars(singleCounter);
+    if(topSetsEl) topSetsEl.innerHTML = topBars(inSetCounter);
+  }
+
+  /* ── Журнал изменений (owner) ────────────────────────────────────────── */
+
+  function logActionLabel(action){
+    return app.i18n.t(`admin.logAction.${action}`) || action;
+  }
+
+  function renderLog(){
+    const body = app.dom.byId('logTableBody');
+    if(!body) return;
+    if(!state.log.length){
+      body.innerHTML = `<tr><td colspan="4">${app.i18n.t('admin.noLog')}</td></tr>`;
+      return;
+    }
+    body.innerHTML = state.log.map(entry => `
+      <tr>
+        <td>${formatDate(entry.timestamp)}</td>
+        <td><span class="admin-badge">${esc(entry.actor_role || '-')}</span></td>
+        <td>${esc(logActionLabel(entry.action))}</td>
+        <td>${esc(entry.target || '')}${entry.details ? `<br><span class="admin-muted">${esc(entry.details)}</span>` : ''}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadLog(){
+    const notice = app.dom.byId('adminLogNotice');
+    try{
+      const data = await app.api.get({action:'log', token:app.api.getAdminToken()});
+      state.log = data.ok && Array.isArray(data.rows) ? data.rows : [];
+      if(notice) notice.textContent = '';
+    }catch(err){
+      console.warn('Log load failed:', err);
+      if(notice){ notice.textContent = `${app.i18n.t('admin.loadError')}: ${err.message}`; notice.dataset.tone = 'danger'; }
+    }
+    renderLog();
   }
 
   function findProduct(productKey){
@@ -323,6 +591,7 @@
       const result = await app.api.get({action:'verify', token});
       if(result.ok){
         app.api.setAdminToken(token);
+        setRole(result.role || 'owner');
         const input = app.dom.byId('adminPassword');
         if(input) input.value = '';
         showShell();
@@ -344,7 +613,19 @@
     });
     app.dom.byId('adminLogoutBtn')?.addEventListener('click', () => {
       app.api.setAdminToken('');
+      setRole('');
+      state.reviews = [];
+      state.log = [];
       showLogin();
+    });
+    app.dom.byId('refreshReviewsBtn')?.addEventListener('click', loadReviewsAdmin);
+    app.dom.byId('refreshCustomersBtn')?.addEventListener('click', loadCustomers);
+    app.dom.byId('refreshLogBtn')?.addEventListener('click', loadLog);
+    app.dom.byId('saveSettingsBtn')?.addEventListener('click', saveSettings);
+    app.dom.byId('reviewsTableBody')?.addEventListener('click', event => {
+      const button = app.dom.closestFromEvent(event, '[data-review-action]');
+      if(!button || button.disabled) return;
+      moderateReview(button.dataset.reviewId, button.dataset.reviewAction);
     });
     app.dom.all('[data-admin-tab]').forEach(button => {
       button.addEventListener('click', () => setTab(button.dataset.adminTab));
@@ -378,6 +659,7 @@
       try{
         const {remote} = await app.orders.updateOrderStatus(select.dataset.orderStatus, select.value);
         if(!remote.ok && !remote.skipped) setOrderNotice(app.i18n.t('admin.statusSyncFailed'), 'warning');
+        else if(remote.certs && remote.certs.length) setOrderNotice(app.i18n.t('admin.certsIssued', {codes:remote.certs.join(', ')}), 'muted');
       }catch(err){
         console.warn('Order status update failed:', err);
         setOrderNotice(app.i18n.t('admin.statusSyncFailed'), 'warning');
@@ -411,5 +693,10 @@
     renderOrders();
     renderProducts();
     renderSummary();
+    renderReviews();
+    renderCustomers();
+    renderAnalytics();
+    renderLog();
+    applyRole();
   });
 })();

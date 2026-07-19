@@ -336,6 +336,7 @@
     card.setAttribute('aria-label', `${product.brand} ${product.name}`);
     card.addEventListener('click', () => openProductModal(product.id));
     card.addEventListener('keydown', event => {
+      if(event.target.closest && event.target.closest('.fav-btn')) return;
       if(event.key === 'Enter' || event.key === ' '){
         event.preventDefault();
         openProductModal(product.id);
@@ -354,11 +355,17 @@
       : '';
 
     card.innerHTML = `
-      <img class="product-image" src="${app.dom.escapeHtml(product.image)}" alt="${app.dom.escapeHtml(product.name)}" data-img-fallback="${app.dom.escapeHtml(product.emoji)}" data-img-fallback-class="product-image">
+      <div class="product-image-wrap">
+        <img class="product-image" src="${app.dom.escapeHtml(product.image)}" alt="${app.dom.escapeHtml(product.name)}" data-img-fallback="${app.dom.escapeHtml(product.emoji)}" data-img-fallback-class="product-image">
+        ${app.favorites.favButtonHtml(product)}
+      </div>
       <div class="product-meta">
         <div class="product-brand">${app.dom.escapeHtml(product.brand)}</div>
         <div class="product-name">${app.dom.escapeHtml(product.name)}</div>
-        <div class="product-price-range">${priceHtml}</div>
+        <div class="product-price-line">
+          <span class="product-price-range">${priceHtml}</span>
+          ${app.reviews ? app.reviews.badgeHtml(product) : ''}
+        </div>
         <div class="product-tags">
           ${product.available ? '' : `<span class="tag tag--danger">${app.i18n.t('filters.unavailable')}</span>`}
           ${volumeTag}
@@ -453,6 +460,14 @@
     bindCatalogFilters(state);
     bindProductModalEvents();
     renderCatalog(state);
+    app.favorites.renderStrips();
+    // Рейтинги подгружаются асинхронно — после загрузки перерисовываем карточки.
+    if(app.reviews && !app.reviews.isLoaded()){
+      app.reviews.load().then(() => {
+        renderCatalog(state);
+        app.favorites.renderStrips();
+      });
+    }
   }
 
   function generateVolumeOptions(product, productId){
@@ -494,6 +509,7 @@
       app.state.selectedOptions[productId] = {volume:Object.keys(product.volumes || {})[0]};
     }
     title.textContent = `${product.brand} ${product.name}`;
+    app.favorites.recordView(product.key);
     const categoryTag = product.category ? `<span class="tag">${app.dom.escapeHtml(product.category)}</span>` : '';
     const extraTags = ['season','gender','occasion']
       .map(field => product[field] ? `<span class="tag">${app.dom.escapeHtml(product[field])}</span>` : '')
@@ -520,10 +536,16 @@
           <div class="detail-title">${app.i18n.t('product.volume')}</div>
           <div class="volume-options" id="volumeOptions-${productId}">${generateVolumeOptions(product, productId)}</div>
           <div class="current-price" id="currentPrice-${productId}">${app.dom.rub(getCurrentPrice(productId))} ₸</div>
-          <button class="add-to-cart" type="button" data-add-product-id="${productId}" ${product.available && getCurrentPrice(productId) ? '' : 'disabled'}>${app.i18n.t('cart.add')}</button>
+          <div class="detail-actions">
+            <button class="add-to-cart" type="button" data-add-product-id="${productId}" ${product.available && getCurrentPrice(productId) ? '' : 'disabled'}>${app.i18n.t('cart.add')}</button>
+            ${app.favorites.favButtonHtml(product, {wide:true})}
+          </div>
         </div>
       </div>
+      ${app.reviews ? app.reviews.sectionHtml(product) : ''}
+      ${app.favorites.similarHtml(product)}
     `;
+    app.i18n.applyTranslations(body);
     app.ui.openModal('productModal');
   }
 
@@ -597,6 +619,7 @@
       const handler = () => {
         state.setFilters[key] = el.value;
         state.pagination.setPage = 1;
+        if(key === 'volume') syncSetCountToMin(el.value);
         renderSetGrid(state);
         calculateCustomSet(state);
       };
@@ -708,6 +731,18 @@
     return MIN_SET_COUNT_BY_VOLUME[volume] || 2;
   }
 
+  // Для объёмов с повышенным минимумом (например, 2 мл → 5 флаконов)
+  // автоматически поднимаем количество до минимума, чтобы пользователя
+  // не блокировало молча предзаполненное значение.
+  function syncSetCountToMin(volume){
+    const countInput = app.dom.byId('customSetCount');
+    if(!countInput) return;
+    const minCount = getMinSetCount(volume || app.dom.byId('customSetVolume')?.value || '');
+    countInput.min = String(minCount);
+    const current = parseInt(countInput.value, 10) || 0;
+    if(current < minCount) countInput.value = String(minCount);
+  }
+
   function calculateCustomSet(state){
     const priceEl = app.dom.byId('customSetPrice');
     const addBtn = app.dom.byId('addCustomSetBtn');
@@ -775,6 +810,7 @@
     const volume = app.dom.byId('customSetVolume');
     if(volume && !volume.value) volume.value = getUniqueVolumes(state.products)[0] || '';
     if(volume) state.setFilters.volume = volume.value;
+    syncSetCountToMin(volume?.value);
     bindSetFilters(state);
     renderSetGrid(state);
     calculateCustomSet(state);
@@ -794,6 +830,11 @@
       if(addButton){
         app.cart.addProduct(parseInt(addButton.dataset.addProductId, 10));
         closeProductModal();
+        return;
+      }
+      const similarButton = app.dom.closestFromEvent(event, '[data-open-product]');
+      if(similarButton){
+        openProductModal(parseInt(similarButton.dataset.openProduct, 10));
       }
     });
     app.dom.byId('closeProductModalBtn')?.addEventListener('click', closeProductModal);
@@ -888,6 +929,7 @@
     loadProducts,
     initCatalogPage,
     initSetPage,
+    renderProductCard,
     openProductModal,
     closeProductModal,
     selectOptionInModal,

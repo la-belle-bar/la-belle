@@ -21,6 +21,7 @@
         <a href="index.html#home" data-i18n="nav.home">Главная</a>
         <a href="index.html#catalog" data-i18n="nav.catalog">Каталог</a>
         <a href="custom-set.html" data-i18n="nav.sets">Сеты</a>
+        <a href="account.html" data-i18n="nav.account">Кабинет</a>
       </nav>
 
       <div class="header-actions">
@@ -154,6 +155,10 @@
                 <input id="c_phone" placeholder="+7 7XX XXX XX XX" />
               </div>
               <div>
+                <label for="c_email" data-i18n="checkout.email">Email (по желанию)</label>
+                <input id="c_email" type="email" autocomplete="email" data-i18n-placeholder="checkout.emailPlaceholder" placeholder="Необязательно" />
+              </div>
+              <div>
                 <label for="paymentMethod" data-i18n="checkout.paymentMethod">Способ оплаты</label>
                 <select id="paymentMethod">
                   <option value="cash" data-i18n="payments.cash">Наличными / переводом</option>
@@ -196,7 +201,38 @@
             </div>
           </div>
 
+          <div class="promo-box">
+            <label for="promoInput" data-i18n="promo.label">Промокод или сертификат</label>
+            <div class="promo-row">
+              <input id="promoInput" type="text" autocomplete="off" spellcheck="false" data-i18n-placeholder="promo.placeholder" placeholder="Введите код" />
+              <button class="btn-secondary" id="applyPromoBtn" type="button" data-mode="apply">Применить</button>
+            </div>
+            <div class="promo-message" id="promoMessage" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="loyalty-box" id="loyaltyBox">
+            <div class="loyalty-head">
+              <span data-i18n="loyalty.title">Бонусные баллы</span>
+              <button class="btn-secondary" id="checkLoyaltyBtn" type="button" data-i18n="loyalty.check">Проверить</button>
+            </div>
+            <div class="loyalty-info" id="loyaltyInfo"></div>
+          </div>
+
           <div class="total">
+            <div class="total-lines">
+              <div class="total-line" id="cartSubtotalLine">
+                <span data-i18n="cart.subtotal">Сумма</span>
+                <span><span id="subtotalPrice">0</span> ₸</span>
+              </div>
+              <div class="total-line total-line--discount is-hidden" id="cartDiscountLine">
+                <span data-i18n="cart.discount">Скидка</span>
+                <span>−<span id="discountPrice">0</span> ₸</span>
+              </div>
+              <div class="total-line total-line--discount is-hidden" id="cartPointsLine">
+                <span data-i18n="loyalty.line">Бонусы</span>
+                <span>−<span id="pointsPrice">0</span> ₸</span>
+              </div>
+            </div>
             <div class="total-price"><span id="totalPrice">0</span> ₸</div>
             <div class="total-actions">
               <button class="btn-secondary btn-wa" id="sendWhatsAppBtn" type="button">WhatsApp</button>
@@ -228,9 +264,13 @@
   <script src="assets/js/types.js" defer></script>
   <script src="assets/js/modules/i18n.js" defer></script>
   <script src="assets/js/modules/storage.js" defer></script>
+  <script src="assets/js/modules/favorites.js" defer></script>
+  <script src="assets/js/modules/reviews.js" defer></script>
   <script src="assets/js/modules/api.js" defer></script>
   <script src="assets/js/modules/kz-cities.js" defer></script>
   <script src="assets/js/modules/products.js" defer></script>
+  <script src="assets/js/modules/promo.js" defer></script>
+  <script src="assets/js/modules/loyalty.js" defer></script>
   <script src="assets/js/modules/cart.js" defer></script>
   <script src="assets/js/modules/payments.js" defer></script>
   <script src="assets/js/modules/orders.js" defer></script>

@@ -25,6 +25,8 @@
   function clearCart(){
     if(stateRef) stateRef.cart = [];
     app.storage.remove(LS_CART_KEY);
+    if(app.promo) app.promo.clear();
+    if(app.loyalty) app.loyalty.clear();
     updateCartCount();
   }
 
@@ -33,6 +35,8 @@
     state.cart = loadCart();
     updateCartCount();
     bindCartEvents();
+    if(app.promo) app.promo.init();
+    if(app.loyalty) app.loyalty.init();
   }
 
   function updateCartCount(){
@@ -84,6 +88,24 @@
     saveCart();
   }
 
+  function addCertificate(amount){
+    if(!stateRef) return;
+    const value = Math.max(0, Math.round(Number(amount) || 0));
+    if(!value) return;
+    stateRef.cart.push({
+      key:`certificate-${Date.now()}`,
+      id:'certificate',
+      name:app.i18n.t('gift.itemName'),
+      brand:app.i18n.t('gift.itemBrand', {amount:app.dom.rub(value)}),
+      description:app.i18n.t('gift.itemDesc'),
+      type:'certificate',
+      price:value,
+      quantity:1
+    });
+    updateCartCount();
+    saveCart();
+  }
+
   function changeQuantity(itemKey, change){
     const item = stateRef.cart.find(cartItem => cartItem.key === itemKey);
     if(!item) return;
@@ -103,8 +125,48 @@
     saveCart();
   }
 
-  function getCartTotal(){
+  function getCartSubtotal(){
     return stateRef?.cart?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
+  }
+
+  // База промокода — без подарочных сертификатов (промо на них не действует).
+  function getCartPromoBase(){
+    return stateRef?.cart?.reduce((sum, item) => sum + (item.type === 'certificate' ? 0 : item.price * item.quantity), 0) || 0;
+  }
+
+  function getCartPromoDiscount(){
+    return app.promo ? app.promo.discountFor(getCartPromoBase()) : 0;
+  }
+
+  function getCartPointsDiscount(){
+    const afterPromo = getCartSubtotal() - getCartPromoDiscount();
+    return app.loyalty ? app.loyalty.pointsDiscountFor(afterPromo) : 0;
+  }
+
+  function getCartDiscount(){
+    return getCartPromoDiscount() + getCartPointsDiscount();
+  }
+
+  function getCartTotal(){
+    return Math.max(0, getCartSubtotal() - getCartDiscount());
+  }
+
+  function renderTotals(){
+    const subtotal = getCartSubtotal();
+    const promoDiscount = getCartPromoDiscount();
+    const pointsDiscount = getCartPointsDiscount();
+    const subtotalEl = app.dom.byId('subtotalPrice');
+    if(subtotalEl) subtotalEl.textContent = app.dom.rub(subtotal);
+    const discountEl = app.dom.byId('discountPrice');
+    if(discountEl) discountEl.textContent = app.dom.rub(promoDiscount);
+    const discountLine = app.dom.byId('cartDiscountLine');
+    if(discountLine) discountLine.classList.toggle('is-hidden', promoDiscount <= 0);
+    const pointsEl = app.dom.byId('pointsPrice');
+    if(pointsEl) pointsEl.textContent = app.dom.rub(pointsDiscount);
+    const pointsLine = app.dom.byId('cartPointsLine');
+    if(pointsLine) pointsLine.classList.toggle('is-hidden', pointsDiscount <= 0);
+    const total = app.dom.byId('totalPrice');
+    if(total) total.textContent = app.dom.rub(getCartTotal());
   }
 
   function displayCartItems(){
@@ -112,8 +174,7 @@
     if(!cartItems || !stateRef) return;
     if(!stateRef.cart.length){
       cartItems.innerHTML = `<div class="empty-state empty-state--cart">${app.i18n.t('cart.empty')}</div>`;
-      const total = app.dom.byId('totalPrice');
-      if(total) total.textContent = '0';
+      renderTotals();
       return;
     }
     cartItems.innerHTML = stateRef.cart.map(item => `
@@ -132,8 +193,7 @@
         </div>
       </div>
     `).join('');
-    const total = app.dom.byId('totalPrice');
-    if(total) total.textContent = app.dom.rub(getCartTotal());
+    renderTotals();
   }
 
   function openCart(){
@@ -162,6 +222,7 @@
     init,
     addProduct,
     addCustomSet,
+    addCertificate,
     clearCart,
     saveCart,
     openCart,
@@ -169,6 +230,11 @@
     updateCartCount,
     displayCartItems,
     getCartTotal,
+    getCartSubtotal,
+    getCartDiscount,
+    getCartPromoBase,
+    getCartPromoDiscount,
+    getCartPointsDiscount,
     getItems: () => stateRef?.cart || []
   };
 })();

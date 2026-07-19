@@ -3,7 +3,7 @@
 
   const app = window.LaBelle = window.LaBelle || {};
   const LS_CHECKOUT_KEY = 'lb_checkout_v1';
-  const CHECKOUT_FIELD_IDS = ['c_name','c_phone','c_city','c_street','c_house','c_flat','c_comment'];
+  const CHECKOUT_FIELD_IDS = ['c_name','c_phone','c_email','c_city','c_street','c_house','c_flat','c_comment'];
 
   let stateRef = null;
   let isSubmitting = false;
@@ -14,6 +14,7 @@
     return {
       name:get('c_name'),
       phone:get('c_phone'),
+      email:get('c_email'),
       city:get('c_city'),
       street:get('c_street'),
       house:get('c_house'),
@@ -79,6 +80,11 @@
       lines.push(`${item.quantity} шт. x ${app.dom.rub(item.price)} ₸ = ${app.dom.rub(item.total)} ₸`);
       lines.push('');
     });
+    if(order.discount > 0 || order.pointsRedeemed > 0){
+      lines.push(`Подытог: ${app.dom.rub(order.subtotal)} ₸`);
+      if(order.discount > 0) lines.push(`Скидка${order.promoCode ? ` (${order.promoCode})` : ''}: -${app.dom.rub(order.discount)} ₸`);
+      if(order.pointsRedeemed > 0) lines.push(`Бонусы: -${app.dom.rub(order.pointsRedeemed)} ₸`);
+    }
     lines.push(`ИТОГО: ${app.dom.rub(order.total)} ₸`);
     return lines.join('\n');
   }
@@ -94,9 +100,19 @@
 
   function createOrderFromCart(){
     const payment = app.payments.getPaymentInfo();
+    const promo = app.promo ? app.promo.get() : null;
+    const subtotal = app.cart.getCartSubtotal();
+    const promoDiscount = app.cart.getCartPromoDiscount();
+    const pointsDiscount = app.cart.getCartPointsDiscount();
+    const redeemPoints = app.loyalty ? app.loyalty.getRedeem() : 0;
     return app.orders.buildOrder({
       customer:getCheckout(),
       items:app.cart.getItems(),
+      subtotal,
+      discount:promoDiscount,
+      pointsRedeemed:pointsDiscount,
+      redeemPoints,
+      promoCode:promo ? promo.code : '',
       total:app.cart.getCartTotal(),
       payment
     });
@@ -233,6 +249,16 @@
               <span>${app.i18n.t('checkout.orderStatus')}</span>
               <strong>${statusLabel(order.status)}</strong>
             </div>
+            ${order.discount > 0 ? `
+            <div>
+              <span>${app.i18n.t('checkout.orderDiscount')}${order.promoCode ? ` · ${app.dom.escapeHtml(order.promoCode)}` : ''}</span>
+              <strong>−${app.dom.rub(order.discount)} ₸</strong>
+            </div>` : ''}
+            ${order.pointsRedeemed > 0 ? `
+            <div>
+              <span>${app.i18n.t('loyalty.orderPoints')}</span>
+              <strong>−${app.dom.rub(order.pointsRedeemed)} ₸</strong>
+            </div>` : ''}
             <div>
               <span>${app.i18n.t('checkout.orderTotal')}</span>
               <strong>${app.dom.rub(order.total)} ₸</strong>
