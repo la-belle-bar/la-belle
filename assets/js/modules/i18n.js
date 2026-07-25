@@ -14,6 +14,7 @@
       'nav.account':'Кабинет',
       'nav.cart':'Корзина',
       'nav.language':'Язык',
+      'nav.theme':'Тема оформления',
       'hero.eyebrow':'Нишевая парфюмерия в распиве',
       'hero.copy':'Каталог ароматов и сетов без лишних категорий: выбирайте по бренду, объему, цене и наличию.',
       'hero.catalogCta':'Смотреть каталог',
@@ -337,6 +338,7 @@
       'nav.account':'Кабинет',
       'nav.cart':'Себет',
       'nav.language':'Тіл',
+      'nav.theme':'Безендіру тақырыбы',
       'hero.eyebrow':'Нишалық парфюмерия',
       'hero.copy':'Артық санаттарсыз ароматтар мен сеттер каталогы: бренд, көлем, баға және қолжетімділік бойынша таңдаңыз.',
       'hero.catalogCta':'Каталогты көру',
@@ -684,6 +686,9 @@
     });
     root.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
       el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+    });
+    root.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.setAttribute('title', t(el.dataset.i18nTitle));
     });
     root.querySelectorAll('#languageSelect').forEach(el => {
       el.value = getLanguage();
