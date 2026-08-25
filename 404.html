@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#EBECE9" />
+  <meta name="robots" content="noindex" />
+  <title>La Belle — страница не найдена</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Тема выставляется до первой отрисовки, поэтому в <head> и без defer -->
+  <script src="assets/js/theme.js"></script>
+</head>
+<!-- Страница намеренно без модулей: она должна открываться, даже если что-то
+     сломалось. Поэтому текст статичный и сразу на двух языках. -->
+<body data-page="404">
+  <header class="site-header">
+    <div class="container header-content">
+      <a class="logo" href="index.html" aria-label="La Belle">La Belle</a>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <section class="set-hero">
+      <div class="container set-hero-inner">
+        <div>
+          <p class="eyebrow">404</p>
+          <h1>Такой страницы нет</h1>
+          <p>Возможно, ссылка устарела или в адресе опечатка. Каталог и сеты на месте.</p>
+          <p class="admin-muted">Мұндай бет жоқ — сілтеме ескірген болуы мүмкін.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container ready-sets-section">
+      <div class="set-hero-actions">
+        <a class="btn-primary" href="index.html">На главную</a>
+        <a class="btn-secondary" href="index.html#catalog">Каталог</a>
+        <a class="btn-secondary" href="sets.html">Готовые сеты</a>
+        <a class="btn-secondary" href="custom-set.html">Конструктор</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <a class="logo" href="index.html">La Belle</a>
+        <div class="socials">
+          <a href="https://wa.me/77022266500" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="https://www.instagram.com/la_belle_parfums/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© La Belle. Все права защищены.</div>
+        <div>Нишевая парфюмерия в распиве</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

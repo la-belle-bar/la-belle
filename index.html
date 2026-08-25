@@ -23,7 +23,8 @@
       <nav class="site-nav" id="siteNav" aria-label="Основное меню" data-i18n-aria-label="nav.main">
         <a href="index.html#home" data-i18n="nav.home">Главная</a>
         <a href="index.html#catalog" data-i18n="nav.catalog">Каталог</a>
-        <a href="custom-set.html" data-i18n="nav.sets">Сеты</a>
+        <a href="sets.html" data-i18n="nav.readySets">Готовые сеты</a>
+        <a href="custom-set.html" data-i18n="nav.builder">Конструктор</a>
         <a href="account.html" data-i18n="nav.account">Кабинет</a>
       </nav>
 
@@ -52,7 +53,7 @@
       <div class="hero-slider" id="heroSlider">
         <div class="hero-slides" id="heroSlides">
           <a class="hero-slide" href="#catalog">
-            <img src="assets/images/banners/banner-original.png" alt="Продаем оригинал доступно" />
+            <img src="assets/images/banners/banner-original.webp" alt="Продаем оригинал доступно" />
             <div class="hero-slide-caption">
               <p class="eyebrow">La Belle</p>
               <strong>Продаем оригинал доступно</strong>
@@ -60,7 +61,7 @@
             </div>
           </a>
           <a class="hero-slide" href="https://wa.me/77022266500?text=Здравствуйте! Хочу приобрести подарочный сертификат La Belle" target="_blank" rel="noopener">
-            <img src="assets/images/banners/banner-certificate.png" alt="Подарите впечатления — подарочный сертификат" loading="lazy" />
+            <img src="assets/images/banners/banner-certificate.webp" alt="Подарите впечатления — подарочный сертификат" loading="lazy" />
             <div class="hero-slide-caption">
               <p class="eyebrow">La Belle</p>
               <strong>Подарите впечатления</strong>
@@ -68,7 +69,7 @@
             </div>
           </a>
           <a class="hero-slide" href="custom-set.html">
-            <img src="assets/images/banners/banner-sets.png" alt="Парфюмерные сеты — соберите свой сет в удобном конфигураторе" loading="lazy" />
+            <img src="assets/images/banners/banner-sets.webp" alt="Парфюмерные сеты — соберите свой сет в удобном конфигураторе" loading="lazy" />
             <div class="hero-slide-caption">
               <p class="eyebrow">La Belle</p>
               <strong>Парфюмерные сеты</strong>
@@ -220,6 +221,17 @@
           </button>
         </div>
       </div>
+    </section>
+
+    <section class="container strip-section is-hidden" id="readySetsSection" aria-label="Готовые сеты" data-i18n-aria-label="readySets.aria">
+      <div class="section-heading section-heading--compact">
+        <div>
+          <p class="eyebrow" data-i18n="readySets.eyebrow">Готовые сеты</p>
+          <h2 data-i18n="readySets.homeTitle">Подборки, собранные за вас</h2>
+        </div>
+        <a class="btn-secondary strip-clear" href="sets.html" data-i18n="readySets.all">Все сеты →</a>
+      </div>
+      <div class="sets-strip" id="readySetsStrip"></div>
     </section>
 
     <section class="container set-teaser-section" aria-label="Конструктор сетов" data-i18n-aria-label="setTeaser.title">
@@ -409,6 +421,7 @@
   <script src="assets/js/modules/slider.js" defer></script>
   <script src="assets/js/modules/kz-cities.js" defer></script>
   <script src="assets/js/modules/products.js" defer></script>
+  <script src="assets/js/modules/ready-sets.js" defer></script>
   <script src="assets/js/modules/promo.js" defer></script>
   <script src="assets/js/modules/loyalty.js" defer></script>
   <script src="assets/js/modules/gift.js" defer></script>

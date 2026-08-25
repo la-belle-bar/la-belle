@@ -1246,9 +1246,10 @@ textarea{min-height:76px;resize:vertical}
   justify-content:space-between;
   gap:20px;
 }
+.set-hero-actions{display:flex;flex-wrap:wrap;gap:10px}
 .set-hero h1{font-size:clamp(32px,5vw,54px);line-height:1}
 .set-hero p:not(.eyebrow){max-width:620px;color:var(--ink-2);margin-top:10px}
-.set-builder{padding:28px 20px 64px}
+.set-builder{padding:28px 20px 64px;scroll-margin-top:90px}
 .set-toolbar{
   grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
 }
@@ -2164,6 +2165,260 @@ body{transition:background-color .2s ease,color .2s ease}
   .theme-toggle{width:38px;height:38px}
 }
 
+/* ── Готовые сеты (лист sets) ─────────────────────────────────────────────── */
+.ready-sets-section{padding:34px 20px 10px;scroll-margin-top:90px}
+.ready-sets-copy{
+  max-width:640px;
+  margin:-6px 0 22px;
+  color:var(--ink-3);
+  font-size:15px;
+  line-height:1.65;
+}
+.ready-sets-hint{
+  display:inline-block;
+  margin:24px 0 0;
+  color:var(--muted);
+  font-size:14px;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.ready-sets-hint:hover{color:var(--fg)}
+.sets-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:18px;
+}
+/* Лента на главной: те же карточки, но горизонтальной прокруткой */
+.sets-strip{
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  padding:4px 2px 14px;
+  scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;
+}
+.sets-strip .set-card{
+  flex:0 0 clamp(216px,64vw,268px);
+  scroll-snap-align:start;
+}
+.set-card{
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  overflow:hidden;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.set-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--line-strong);
+  box-shadow:var(--shadow-card-hover);
+}
+.set-card.is-unavailable{opacity:.68}
+.set-card-image{
+  position:relative;
+  aspect-ratio:4/3;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(120% 120% at 50% 0%,var(--tile-a) 0%,var(--tile-b) 100%);
+  border-bottom:1px solid var(--line);
+}
+.set-card-image img{width:100%;height:100%;object-fit:cover}
+.set-card-fallback{font-size:46px;color:var(--muted)}
+/* Полка из флаконов каталога — когда у сета нет своей картинки */
+.set-card-shelf{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  height:100%;
+  padding:14px 16px;
+}
+.set-card-shelf img{
+  width:auto;
+  height:100%;
+  max-width:30%;
+  object-fit:contain;
+}
+.set-card-badge,
+.set-card-saving{
+  position:absolute;
+  top:10px;
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  letter-spacing:.02em;
+}
+.set-card-badge{
+  left:10px;
+  background:var(--accent);
+  color:var(--accent-ink);
+}
+.set-card-saving{
+  right:10px;
+  background:var(--glass);
+  border:1px solid var(--line);
+  color:var(--fg);
+}
+.set-card-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:14px;
+  flex:1;
+}
+.set-card-name{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:22px;
+  line-height:1.08;
+}
+.set-card-desc{
+  color:var(--ink-3);
+  font-size:14px;
+  line-height:1.55;
+}
+.set-card-composition{display:grid;gap:4px}
+.set-card-composition-title{
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.set-card-list{
+  margin:0;
+  padding-left:18px;
+  color:var(--ink-2);
+  font-size:14px;
+  line-height:1.5;
+}
+.set-card-list li.is-out{color:var(--muted);text-decoration:line-through}
+.set-card-item-note{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  text-decoration:none;
+}
+.set-card-tags{display:flex;flex-wrap:wrap;gap:6px}
+/* Подвал прижат к низу карточки, чтобы кнопки в ряду были на одной линии */
+.set-card-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:auto;
+  padding-top:4px;
+}
+.set-card-price{display:flex;align-items:baseline;gap:8px}
+.set-card-price-now{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1}
+.set-card-price-old{color:var(--muted);font-size:14px;text-decoration:line-through}
+.set-card-add{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-height:42px;
+  margin:0;
+  padding:0 18px;
+  white-space:nowrap;
+}
+.set-card--compact .set-card-name{font-size:19px}
+.set-card--compact .set-card-desc{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+@media (max-width:760px){
+  .ready-sets-section{padding:24px 20px 4px}
+  .sets-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .set-card-footer{align-items:stretch}
+  .set-card-add{flex:1}
+}
+
+/* ── Админка: редактор готового сета ──────────────────────────────────────── */
+.admin-sets-table{min-width:900px}
+.admin-sets-table td:nth-child(2){max-width:320px}
+.set-picker-chips{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+  margin-bottom:12px;
+}
+.set-picker-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 6px 5px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--ink-2);
+  font-size:13px;
+}
+/* Позиция, которой нет в каталоге: сервер не посчитает по ней цену */
+.set-picker-chip.is-unknown{border-color:var(--danger);color:var(--danger)}
+.set-picker-chip button{
+  display:grid;
+  place-items:center;
+  width:20px;
+  height:20px;
+  border:0;
+  border-radius:999px;
+  background:var(--chip);
+  color:var(--ink-3);
+  font-size:14px;
+  line-height:1;
+  cursor:pointer;
+}
+.set-picker-chip button:hover{background:var(--line-strong)}
+.set-picker-list{
+  display:grid;
+  gap:4px;
+  max-height:240px;
+  margin-top:10px;
+  padding:6px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.set-picker-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  padding:8px 10px;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:var(--fg);
+  font:inherit;
+  font-size:14px;
+  text-align:left;
+  cursor:pointer;
+}
+.set-picker-item:hover{background:var(--chip)}
+.set-picker-item.is-picked{
+  border-color:var(--accent);
+  background:var(--chip);
+  font-weight:500;
+}
+.set-picker-item.is-picked span:first-child::before{content:'✓ '}
+
 /* Яркие изображения на тёмном фоне (в светлой теме фильтры = none) */
 .hero-slide img,.hero-shelf img{filter:var(--img-filter)}
-.product-image img,.detail-image img,.custom-item-image img,.similar-card-image img{filter:var(--photo-filter)}
+.product-image img,.detail-image img,.custom-item-image img,.similar-card-image img,
+.set-card-image img{filter:var(--photo-filter)}

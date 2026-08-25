@@ -88,6 +88,32 @@
     saveCart();
   }
 
+  // Готовый сет из листа sets: ref хранит set_id — по нему сервер сверяет цену.
+  function addReadySet(set){
+    if(!stateRef || !set) return;
+    const existing = stateRef.cart.find(item => item.type === 'ready-set' && item.ref === set.id);
+    if(existing){
+      existing.quantity += 1;
+    }else{
+      stateRef.cart.push({
+        key:`ready-set-${set.id}`,
+        id:'ready-set',
+        ref:set.id,
+        name:set.name,
+        brand:set.count
+          ? app.i18n.t(set.volume ? 'readySets.bottles' : 'readySets.bottlesNoVolume', {count:set.count, volume:set.volume})
+          : app.i18n.t('readySets.eyebrow'),
+        // Состав через запятую: так же, как у кастомного сета — аналитика считает топ ароматов отсюда.
+        description:(set.names || []).join(', '),
+        type:'ready-set',
+        price:set.price,
+        quantity:1
+      });
+    }
+    updateCartCount();
+    saveCart();
+  }
+
   function addCertificate(amount){
     if(!stateRef) return;
     const value = Math.max(0, Math.round(Number(amount) || 0));
@@ -222,6 +248,7 @@
     init,
     addProduct,
     addCustomSet,
+    addReadySet,
     addCertificate,
     clearCart,
     saveCart,

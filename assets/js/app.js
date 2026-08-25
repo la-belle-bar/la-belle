@@ -46,8 +46,12 @@
     if(year) year.textContent = new Date().getFullYear();
   }
 
+  // На sets.html каталог нужен не для витрины, а ради картинок в составе сетов.
+  const PRODUCT_PAGES = ['catalog','custom-set','sets'];
+  const READY_SET_PAGES = ['catalog','sets'];
+
   async function initProducts(){
-    if(page !== 'catalog' && page !== 'custom-set') return;
+    if(!PRODUCT_PAGES.includes(page)) return [];
     try{
       state.products = await app.products.loadProducts();
       app.products.populateHeroShelf(state.products);
@@ -56,6 +60,16 @@
     }catch(err){
       app.products.renderLoadError(page, err);
     }
+    return state.products;
+  }
+
+  // Готовые сеты грузятся параллельно каталогу, но рисуются после него:
+  // состав сета — это позиции каталога, оттуда же берутся картинки флаконов.
+  let productsReady = Promise.resolve([]);
+
+  function initReadySets(){
+    if(!READY_SET_PAGES.includes(page)) return;
+    app.readySets.init(page, productsReady);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -65,10 +79,12 @@
     app.cart.init(state);
     app.checkout.init(state);
     initYear();
-    initProducts();
+    productsReady = initProducts();
+    initReadySets();
   });
 
   document.addEventListener('lb:language-changed', () => {
+    if(app.readySets) app.readySets.render(page, state.products);
     if(!state.products.length) return;
     if(page === 'catalog') app.products.initCatalogPage(state);
     if(page === 'custom-set') app.products.initSetPage(state);

@@ -13,6 +13,7 @@
 | `components/buttons.html` | btn-primary / btn-secondary / btn-wa / add-to-cart / cart-btn |
 | `components/forms.html` | Поля, select, textarea, панель фильтров, форма заказа |
 | `components/product-card.html` | Карточка товара (обычная и «нет в наличии») |
+| `components/set-card.html` | Карточка готового сета (полная, компактная, «распродан») |
 | `components/tags.html` | Теги, admin-бейджи, пилюли выбранного |
 | `components/volume-options.html` | Выбор объёма + цена + add-to-cart |
 | `components/cart.html` | Строка корзины, количество, блок «итого» |

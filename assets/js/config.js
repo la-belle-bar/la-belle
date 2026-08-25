@@ -1,6 +1,6 @@
 window.LaBelle = window.LaBelle || {};
 
-// ВАЖНО: этот файл публичный (GitHub Pages). Здесь не должно быть ни одного
+// ВАЖНО: этот файл раздаётся публично. Здесь не должно быть ни одного
 // секрета: ни паролей, ни токенов, ни ID приватных таблиц. Все секреты живут
 // в Google Apps Script -> Project Settings -> Script Properties.
 window.LaBelle.config = {

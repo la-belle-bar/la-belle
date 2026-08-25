@@ -1,0 +1,33 @@
+# HTTP-заголовки для Cloudflare Pages (Netlify понимает этот же формат).
+#
+# Content-Security-Policy намеренно НЕ здесь, а в <meta> внутри каждой страницы:
+# так защита переезжает вместе с сайтом на любой хостинг. Ниже — только то,
+# чего в <meta> быть не может либо что относится к раздаче файлов.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Strict-Transport-Security: max-age=31536000
+  Cross-Origin-Opener-Policy: same-origin
+
+# Шрифты не меняются годами — кэшируем максимально.
+# Если когда-нибудь замените файл, дайте ему НОВОЕ имя, иначе у постоянных
+# посетителей останется старый в кэше.
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/images/*
+  Cache-Control: public, max-age=604800
+
+# В именах styles.css и app.js нет хэша содержимого, поэтому нужна ревалидация:
+# иначе после деплоя вернувшиеся посетители останутся на старой версии сайта.
+/assets/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

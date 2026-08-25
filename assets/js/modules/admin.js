@@ -5,13 +5,15 @@
   const statuses = ['new','awaiting_payment','paid','processing','completed','cancelled'];
   const SS_ROLE_KEY = 'lb_admin_role_v1';
   const OWNER_ONLY_TABS = ['analytics','log','settings'];
-  const PANELS = {orders:'ordersPanel', products:'productsPanel', reviews:'reviewsPanel', customers:'customersPanel', analytics:'analyticsPanel', log:'logPanel', settings:'settingsPanel'};
+  const PANELS = {orders:'ordersPanel', products:'productsPanel', sets:'setsPanel', reviews:'reviewsPanel', customers:'customersPanel', analytics:'analyticsPanel', log:'logPanel', settings:'settingsPanel'};
 
   const state = {
     activeTab:'orders',
     role:'',
     orders:[],
     products:[],
+    sets:[],
+    setsConfigured:true,
     reviews:[],
     customers:[],
     log:[],
@@ -107,6 +109,7 @@
     Object.entries(PANELS).forEach(([name, id]) => {
       app.dom.byId(id)?.classList.toggle('is-hidden', name !== tab);
     });
+    if(tab === 'sets' && !state.sets.length) loadSets();
     if(tab === 'reviews' && !state.reviews.length) loadReviewsAdmin();
     if(tab === 'customers' && !state.customers.length) loadCustomers();
     if(tab === 'analytics') renderAnalytics();
@@ -299,9 +302,11 @@
   async function loadProducts(){
     try{
       state.products = await app.products.loadProducts();
+      buildCatalogMatch();
       renderProductBrandOptions();
       renderProducts();
       renderSummary();
+      if(state.sets.length) renderSets();
     }catch(err){
       console.warn('Products load failed:', err);
       setNotice(`${app.i18n.t('admin.loadError')}: ${err.message}`, 'danger');
@@ -311,6 +316,309 @@
   async function loadAdminData(){
     await Promise.all([loadOrders(), loadProducts()]);
     if(state.activeTab === 'analytics') renderAnalytics();
+  }
+
+  /* ── Готовые сеты ────────────────────────────────────────────────────── */
+
+  const SET_INACTIVE = ['false','0','no','нет','off','неактивен','disabled'];
+  // Состав редактируемого сета: строки в том виде, в каком они лягут в лист.
+  let setDraftItems = [];
+  // Индекс каталога — повторяет серверный matchKey_, чтобы админка показывала
+  // ровно то, что потом найдёт сервер.
+  let catalogMatch = new Map();
+
+  function setSetNotice(message, tone = 'muted'){
+    const notice = app.dom.byId('adminSetNotice');
+    if(!notice) return;
+    notice.textContent = message || '';
+    notice.dataset.tone = tone;
+  }
+
+  function toInt(value){
+    const digits = String(value ?? '').replace(/[^\d]/g, '');
+    return digits ? parseInt(digits, 10) : 0;
+  }
+
+  function splitList(value){
+    return String(value ?? '')
+      .split(/[,;\n]/)
+      .map(part => part.trim())
+      .filter(Boolean);
+  }
+
+  function matchKey(value){
+    return String(value ?? '')
+      .toLowerCase()
+      .replace(/[«»"'`’]/g, '')
+      .replace(/[—–\-|/]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function buildCatalogMatch(){
+    catalogMatch = new Map();
+    state.products.forEach(product => {
+      const put = key => {
+        if(key && !catalogMatch.has(key)) catalogMatch.set(key, product);
+      };
+      if(product.key.startsWith('sku:')) put(matchKey(product.key.slice(4)));
+      put(matchKey(`${product.brand} ${product.name}`));
+      put(matchKey(product.name));
+    });
+  }
+
+  function productLabel(product){
+    return `${product.brand} ${product.name}`.trim();
+  }
+
+  function resolveSetItem(raw){
+    return catalogMatch.get(matchKey(raw)) || null;
+  }
+
+  function isSetRowActive(row){
+    const raw = String(row.active ?? '').trim().toLowerCase();
+    return raw === '' ? true : !SET_INACTIVE.includes(raw);
+  }
+
+  async function loadSets(){
+    try{
+      const data = await app.api.get({action:'sets_admin', token:app.api.getAdminToken()});
+      state.sets = data.ok && Array.isArray(data.rows) ? data.rows : [];
+      state.setsConfigured = data.configured !== false;
+      setSetNotice(state.setsConfigured ? '' : app.i18n.t('admin.setsNotConfigured'), 'warning');
+    }catch(err){
+      console.warn('Sets load failed:', err);
+      setSetNotice(`${app.i18n.t('admin.loadError')}: ${err.message}`, 'danger');
+    }
+    renderSets();
+  }
+
+  // Цена сета может быть не задана — тогда её считает сервер по каталогу.
+  function setPriceLabel(row){
+    const price = toInt(row.price);
+    if(price) return `${app.dom.rub(price)} ₸`;
+    const discount = toInt(row.discount_percent);
+    return discount
+      ? app.i18n.t('admin.setPriceAutoDiscount', {percent:discount})
+      : app.i18n.t('admin.setPriceAuto');
+  }
+
+  function renderSets(){
+    const body = app.dom.byId('setsTableBody');
+    if(!body) return;
+    if(!state.sets.length){
+      body.innerHTML = `<tr><td colspan="7">${app.i18n.t('admin.noSets')}</td></tr>`;
+      return;
+    }
+    body.innerHTML = state.sets.map(row => {
+      const setId = String(row.set_id ?? '').trim();
+      const items = splitList(row.items);
+      // Пока каталог не загрузился, сверять состав не с чем — не пугаем красным.
+      const unknown = state.products.length ? items.filter(item => !resolveSetItem(item)).length : 0;
+      const active = isSetRowActive(row);
+      const stock = String(row.stock_qty ?? '').trim();
+      return `
+        <tr>
+          <td>
+            <strong>${esc(row.name || setId)}</strong><br>
+            <span class="admin-muted">${esc(setId)}</span>
+          </td>
+          <td>
+            ${items.length ? esc(items.join(', ')) : '-'}
+            ${unknown ? `<br><span class="admin-badge admin-badge--danger">${app.i18n.t('admin.setUnknownItems', {count:unknown})}</span>` : ''}
+          </td>
+          <td>${row.volume ? `${esc(row.volume)}мл` : '-'}</td>
+          <td>${setPriceLabel(row)}</td>
+          <td>${stock === '' ? '-' : esc(stock)}</td>
+          <td><span class="admin-badge ${active ? 'admin-badge--ok' : 'admin-badge--muted'}">${app.i18n.t(active ? 'admin.setShown' : 'admin.setHidden')}</span></td>
+          <td><button class="btn-secondary" type="button" data-edit-set="${esc(setId)}">${app.i18n.t('admin.edit')}</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  /* ── Редактор сета ───────────────────────────────────────────────────── */
+
+  function findSetRow(setId){
+    return state.sets.find(row => String(row.set_id ?? '').trim() === setId) || null;
+  }
+
+  function fillSetVolumeOptions(current){
+    const select = app.dom.byId('setFieldVolume');
+    if(!select) return;
+    const volumes = Array.from(new Set(state.products.flatMap(product => Object.keys(product.volumes || {}))))
+      .sort((a, b) => Number(a) - Number(b));
+    // Объём уже сохранённого сета оставляем в списке, даже если в каталоге
+    // такого больше нет — иначе сохранение молча его сотрёт.
+    const value = String(current || '');
+    if(value && !volumes.includes(value)) volumes.push(value);
+    select.innerHTML = `<option value="">—</option>${
+      volumes.map(volume => `<option value="${esc(volume)}">${esc(volume)}мл</option>`).join('')
+    }`;
+    select.value = value;
+  }
+
+  function currentSetVolume(){
+    return app.dom.byId('setFieldVolume')?.value || '';
+  }
+
+  // Каталожная сумма состава при выбранном объёме — то же, что посчитает сервер.
+  function catalogTotalForDraft(){
+    const volume = currentSetVolume();
+    if(!volume || !setDraftItems.length) return 0;
+    let total = 0;
+    for(const raw of setDraftItems){
+      const product = resolveSetItem(raw);
+      const price = product?.volumes?.[volume];
+      if(!price) return 0;
+      total += price;
+    }
+    return total;
+  }
+
+  function renderSetPricePreview(){
+    const preview = app.dom.byId('setPricePreview');
+    if(!preview) return;
+    const total = catalogTotalForDraft();
+    if(!total){
+      preview.textContent = app.i18n.t('admin.setPriceNoCatalog');
+      preview.dataset.tone = 'muted';
+      return;
+    }
+    const manual = toInt(app.dom.byId('setFieldPrice')?.value);
+    const discount = Math.max(0, Math.min(90, toInt(app.dom.byId('setFieldDiscount')?.value)));
+    const computed = discount ? Math.round(total * (100 - discount) / 100) : total;
+    preview.textContent = app.i18n.t('admin.setPricePreview', {
+      total:app.dom.rub(total),
+      price:app.dom.rub(manual || computed)
+    });
+    preview.dataset.tone = 'muted';
+  }
+
+  function renderSetPicker(){
+    const chips = app.dom.byId('setPickerChips');
+    const list = app.dom.byId('setPickerList');
+    if(!chips || !list) return;
+
+    chips.innerHTML = setDraftItems.length
+      ? setDraftItems.map((item, index) => {
+          const known = Boolean(resolveSetItem(item));
+          return `<span class="set-picker-chip${known ? '' : ' is-unknown'}">
+            ${esc(item)}
+            <button type="button" data-set-item-remove="${index}" aria-label="${esc(app.i18n.t('cart.remove'))}">×</button>
+          </span>`;
+        }).join('')
+      : `<span class="admin-muted">${esc(app.i18n.t('admin.setPickEmpty'))}</span>`;
+
+    const query = (app.dom.byId('setPickerSearch')?.value || '').trim().toLowerCase();
+    const volume = currentSetVolume();
+    const picked = new Set(setDraftItems.map(matchKey));
+    const matches = state.products.filter(product => {
+      if(volume && !product.volumes?.[volume]) return false;
+      if(!query) return true;
+      return `${product.brand} ${product.name}`.toLowerCase().includes(query);
+    }).slice(0, 60);
+
+    list.innerHTML = matches.length
+      ? matches.map(product => {
+          const label = productLabel(product);
+          const isPicked = picked.has(matchKey(label));
+          const price = volume ? product.volumes?.[volume] : null;
+          const note = price
+            ? `${app.dom.rub(price)} ₸`
+            : app.i18n.t(product.available ? 'admin.setNoVolumePrice' : 'filters.unavailable');
+          return `<button class="set-picker-item${isPicked ? ' is-picked' : ''}" type="button" data-set-item-add="${esc(label)}">
+            <span>${esc(label)}</span>
+            <span class="admin-muted">${esc(note)}</span>
+          </button>`;
+        }).join('')
+      : `<div class="admin-muted">${esc(app.i18n.t('catalog.empty'))}</div>`;
+
+    renderSetPricePreview();
+  }
+
+  function toggleSetItem(label){
+    const key = matchKey(label);
+    const index = setDraftItems.findIndex(item => matchKey(item) === key);
+    if(index > -1) setDraftItems.splice(index, 1);
+    else setDraftItems.push(label);
+    renderSetPicker();
+  }
+
+  function openSetEditor(setId){
+    const row = setId ? findSetRow(setId) : null;
+    buildCatalogMatch();
+    app.dom.byId('editSetId').value = row ? String(row.set_id ?? '').trim() : '';
+    fillSetVolumeOptions(row?.volume);
+    app.dom.all('[data-set-field]').forEach(input => {
+      if(input.dataset.setField === 'volume') return;
+      input.value = row ? String(row[input.dataset.setField] ?? '') : '';
+    });
+    const activeSelect = app.dom.byId('setFieldActive');
+    if(activeSelect) activeSelect.value = row && !isSetRowActive(row) ? 'нет' : '';
+    // Код сета — ключ строки в листе и ссылка из заказов: у готового сета не меняем.
+    const codeInput = app.dom.byId('setFieldCode');
+    if(codeInput) codeInput.readOnly = Boolean(row);
+    const title = app.dom.byId('setEditorTitle');
+    if(title) title.textContent = app.i18n.t(row ? 'admin.setEditor' : 'admin.setEditorNew');
+    setDraftItems = row ? splitList(row.items) : [];
+    const search = app.dom.byId('setPickerSearch');
+    if(search) search.value = '';
+    renderSetPicker();
+    setSetNotice('');
+    app.ui.openModal('setEditorModal');
+  }
+
+  function closeSetEditor(){
+    app.ui.closeModal('setEditorModal');
+  }
+
+  function collectSetForm(){
+    const values = {};
+    app.dom.all('[data-set-field]').forEach(input => {
+      values[input.dataset.setField] = String(input.value ?? '').trim();
+    });
+    values.items = setDraftItems.join(', ');
+    return values;
+  }
+
+  async function saveSetEditor(){
+    if(!state.setsConfigured){
+      setSetNotice(app.i18n.t('admin.setsNotConfigured'), 'danger');
+      return;
+    }
+    const values = collectSetForm();
+    const setId = String(values.set_id || '').trim();
+    const editing = String(app.dom.byId('editSetId')?.value || '').trim();
+    if(!setId){ setSetNotice(app.i18n.t('admin.setCodeRequired'), 'danger'); return; }
+    if(!values.name){ setSetNotice(app.i18n.t('admin.setNameRequired'), 'danger'); return; }
+    if(!setDraftItems.length){ setSetNotice(app.i18n.t('admin.setItemsRequired'), 'danger'); return; }
+    if(!editing && findSetRow(setId)){ setSetNotice(app.i18n.t('admin.setCodeTaken'), 'danger'); return; }
+    if(!toInt(values.price) && !catalogTotalForDraft()){
+      setSetNotice(app.i18n.t('admin.setPriceRequired'), 'danger');
+      return;
+    }
+
+    try{
+      const result = await app.api.post({
+        action:'upsert_set',
+        token:app.api.getAdminToken(),
+        set_id:setId,
+        sheet_set:values
+      });
+      if(!result || result.ok === false) throw new Error(result?.error || 'save_failed');
+      closeSetEditor();
+      await loadSets();
+      const skipped = Array.isArray(result.skipped) ? result.skipped : [];
+      if(skipped.length){
+        setSetNotice(app.i18n.t('admin.setSkippedColumns', {columns:skipped.join(', ')}), 'warning');
+      }else{
+        setSetNotice(app.i18n.t(result.created ? 'admin.setCreated' : 'admin.setSaved'));
+      }
+    }catch(err){
+      console.warn('Set save failed:', err);
+      setSetNotice(`${app.i18n.t('admin.saveFailed')}: ${err.message}`, 'danger');
+    }
   }
 
   /* ── Отзывы (модерация) ──────────────────────────────────────────────── */
@@ -405,11 +713,12 @@
 
   /* ── Аналитика (считаем из уже загруженных заказов) ──────────────────── */
 
-  // Строка заказа считается сетом по type='custom-set' или (для старых заказов
-  // без type) по названию кастомного сета в обоих языках.
+  // Строка заказа считается сетом по type ('custom-set' или 'ready-set') либо
+  // (для старых заказов без type) по названию кастомного сета в обоих языках.
   const SET_NAMES = ['кастомный сет','жеке сет'];
+  const SET_TYPES = ['custom-set','ready-set'];
   function isSetItem(item){
-    if(item.type === 'custom-set') return true;
+    if(SET_TYPES.includes(item.type)) return true;
     return SET_NAMES.includes(String(item.name || '').trim().toLowerCase());
   }
 
@@ -616,6 +925,7 @@
       setRole('');
       state.reviews = [];
       state.log = [];
+      state.sets = [];
       showLogin();
     });
     app.dom.byId('refreshReviewsBtn')?.addEventListener('click', loadReviewsAdmin);
@@ -671,6 +981,34 @@
       if(!button) return;
       openProductEditor(button.dataset.editProduct);
     });
+    app.dom.byId('refreshSetsBtn')?.addEventListener('click', loadSets);
+    app.dom.byId('createSetBtn')?.addEventListener('click', () => openSetEditor(''));
+    app.dom.byId('setsTableBody')?.addEventListener('click', event => {
+      const button = app.dom.closestFromEvent(event, '[data-edit-set]');
+      if(!button) return;
+      openSetEditor(button.dataset.editSet);
+    });
+    app.dom.byId('setPickerSearch')?.addEventListener('input', renderSetPicker);
+    app.dom.byId('setFieldVolume')?.addEventListener('change', renderSetPicker);
+    app.dom.byId('setFieldPrice')?.addEventListener('input', renderSetPricePreview);
+    app.dom.byId('setFieldDiscount')?.addEventListener('input', renderSetPricePreview);
+    app.dom.byId('setPickerList')?.addEventListener('click', event => {
+      const button = app.dom.closestFromEvent(event, '[data-set-item-add]');
+      if(!button) return;
+      toggleSetItem(button.dataset.setItemAdd);
+    });
+    app.dom.byId('setPickerChips')?.addEventListener('click', event => {
+      const button = app.dom.closestFromEvent(event, '[data-set-item-remove]');
+      if(!button) return;
+      setDraftItems.splice(Number(button.dataset.setItemRemove), 1);
+      renderSetPicker();
+    });
+    app.dom.byId('closeSetEditorBtn')?.addEventListener('click', closeSetEditor);
+    app.dom.byId('cancelSetEditBtn')?.addEventListener('click', closeSetEditor);
+    app.dom.byId('setEditorForm')?.addEventListener('submit', event => {
+      event.preventDefault();
+      saveSetEditor();
+    });
     app.dom.byId('closeProductEditorBtn')?.addEventListener('click', closeProductEditor);
     app.dom.byId('cancelProductEditBtn')?.addEventListener('click', closeProductEditor);
     app.dom.byId('resetProductOverrideBtn')?.addEventListener('click', resetProductOverride);
@@ -693,6 +1031,7 @@
     renderOrders();
     renderProducts();
     renderSummary();
+    renderSets();
     renderReviews();
     renderCustomers();
     renderAnalytics();

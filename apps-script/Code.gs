@@ -1,7 +1,7 @@
 /**
  * La Belle — серверная часть на Google Apps Script.
  *
- * Единственная точка доступа сайта (GitHub Pages) к ПРИВАТНОЙ Google-таблице.
+ * Единственная точка доступа сайта (Cloudflare Pages) к ПРИВАТНОЙ Google-таблице.
  * Скрипт выполняется от имени владельца таблицы, поэтому саму таблицу
  * никому расшаривать не нужно.
  *
@@ -25,12 +25,14 @@
  *
  * ── API ──────────────────────────────────────────────────────────────────────
  * GET  ?action=catalog                     — каталог (публично)
+ * GET  ?action=sets                        — готовые сеты (публично)
  * GET  ?action=verify&token=...            — проверка админ-ключа
  * GET  ?action=orders&token=...            — список заказов (только админ)
  * GET  ?action=test_telegram&token=...     — отправить тестовое сообщение в Telegram
  *                                            и вернуть ответ Telegram (диагностика)
  * POST {action:'submit_order', order, website}                — новый заказ
  * POST {action:'upsert_product', token, product_key, sheet_product}
+ * POST {action:'upsert_set', token, set_id, sheet_set}        — создать/изменить сет
  * POST {action:'update_order_status', token, order_id, status}
  */
 
@@ -49,6 +51,24 @@ var CUSTOMER_HEADERS = ['phone','name','points','total_spent','orders_count','fi
 // Колонки: code, type(percent|fixed|cert), value, min_order, active,
 //          expires_at, usage_limit, used_count, note
 var PROMO_HEADERS = ['code','type','value','min_order','active','expires_at','usage_limit','used_count','note'];
+
+// Лист готовых сетов (gid — в Script Properties SETS_SHEET_GID). Только чтение.
+// Колонки: set_id, name, name_kk, description, description_kk, items, volume,
+//          count, price, discount_percent, old_price, badge, badge_kk,
+//          image_url, tags, stock_qty, active, sort
+// items — позиции КАТАЛОГА через запятую (артикул, «Бренд Название»
+// или просто название): из них сервер берёт цены и наличие.
+// Лист необязателен: если gid не задан, раздел «Готовые сеты» просто пуст.
+// Ключ сета — set_id: по нему сверяется цена сета в заказе.
+var SET_HEADERS = [
+  'set_id','name','name_kk','description','description_kk','items','volume','count',
+  'price','discount_percent','old_price','badge','badge_kk','image_url','tags',
+  'stock_qty','active','sort'
+];
+
+// Эти колонки пишем в лист числами, а не текстом, чтобы таблица
+// сортировалась и суммировалась как обычно.
+var SET_NUMERIC_FIELDS = ['count','price','discount_percent','old_price','stock_qty','sort'];
 
 // Лист отзывов (gid — в Script Properties REVIEW_SHEET_GID).
 // Отзыв публикуется на сайте только со статусом approved (модерация вручную).
@@ -74,6 +94,7 @@ function doGet(e){
   var action = params.action || 'catalog';
   try{
     if(action === 'catalog') return json_({ok:true, rows:readRows_('catalog')});
+    if(action === 'sets') return json_({ok:true, rows:readActiveSets_()});
     if(action === 'validate_promo') return json_(evaluatePromo_(params.code, num_(params.subtotal, 0, 100000000)));
     if(action === 'reviews') return json_({ok:true, rows:readApprovedReviews_(params.product_key || '')});
     if(action === 'loyalty_balance') return json_(loyaltyBalanceResponse_(params.phone));
@@ -93,6 +114,10 @@ function doGet(e){
     if(action === 'customers_admin'){
       requireAdmin_(params.token);
       return json_({ok:true, rows:readCustomersAdmin_()});
+    }
+    if(action === 'sets_admin'){
+      requireAdmin_(params.token);
+      return json_(readSetsAdmin_());
     }
     if(action === 'log'){
       requireRole_(params.token, 'owner');
@@ -131,6 +156,10 @@ function doPost(e){
     if(action === 'upsert_product'){
       var upsertRole = requireAdmin_(body.token);
       return json_(handleUpsertProduct_(body, upsertRole));
+    }
+    if(action === 'upsert_set'){
+      var setRole = requireAdmin_(body.token);
+      return json_(handleUpsertSet_(body, setRole));
     }
     if(action === 'update_order_status'){
       var statusRole = requireAdmin_(body.token);
@@ -356,9 +385,23 @@ function checkPrices_(items){
     catalog[key] = row;
   });
 
+  var sets = {};
+  readActiveSets_().forEach(function(set){
+    sets[normalizeIdentity_(set.set_id)] = set;
+  });
+
   var problems = [];
   var unknown = 0;
   items.forEach(function(item){
+    // Готовый сет сверяем по set_id (приходит в item.ref) с ценой, посчитанной сервером.
+    if(normalizeIdentity_(item.type) === 'ready-set'){
+      var set = sets[normalizeIdentity_(item.ref)];
+      if(!set || !set.price){ unknown++; return; }
+      if(Number(set.price) !== Number(item.price)){
+        problems.push(item.name + ': ' + item.price + ' вместо ' + set.price);
+      }
+      return;
+    }
     var row = catalog[normalizeIdentity_(item.brand) + '|' + normalizeIdentity_(item.name)];
     if(!row){ unknown++; return; }
     var volumeMatch = String(item.description || '').match(/(\d+)\s*мл/i);
@@ -374,6 +417,293 @@ function checkPrices_(items){
   return unknown ? 'ok (' + unknown + ' не проверено)' : 'ok';
 }
 
+/* ── Готовые сеты ───────────────────────────────────────────────────────── */
+
+function getSetsSheet_(){
+  var ss = getSpreadsheet_();
+  var gid = prop_('SETS_SHEET_GID');
+  if(!gid) throw new Error('SETS_SHEET_GID is not set in Script Properties');
+  var sheets = ss.getSheets();
+  for(var i = 0; i < sheets.length; i++){
+    if(String(sheets[i].getSheetId()) === String(gid)) return sheets[i];
+  }
+  throw new Error('sets sheet not found by gid ' + gid);
+}
+
+// Пустое поле stock_qty означает «не считаем остаток», 0 — распродан.
+function setStock_(value){
+  return String(value == null ? '' : value).trim() === '' ? '' : toInt_(value);
+}
+
+// Состав и теги в листе пишутся одной строкой через запятую.
+function splitList_(value){
+  return String(value == null ? '' : value)
+    .split(/[,;\n]/)
+    .map(function(part){ return part.trim(); })
+    .filter(function(part){ return part !== ''; });
+}
+
+// Ключ для сопоставления строки состава с каталогом: регистр, кавычки,
+// тире и лишние пробелы не должны мешать владельцу заполнять лист вручную.
+function matchKey_(value){
+  return String(value == null ? '' : value)
+    .toLowerCase()
+    .replace(/[«»"'`’]/g, '')
+    .replace(/[—–\-|\/]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Цены по объёмам из строки каталога — та же раскладка, что и на клиенте.
+function catalogVolumes_(row){
+  var columns = {'price_2ml':'2', 'price_5ml':'5', 'price_10ml':'10', 'price_15ml':'15', 'price_20ml':'20'};
+  var volumes = {};
+  Object.keys(columns).forEach(function(column){
+    var price = toInt_(row[column]);
+    if(price) volumes[columns[column]] = price;
+  });
+  return volumes;
+}
+
+function catalogRowValue_(row, keys){
+  for(var i = 0; i < keys.length; i++){
+    if(row[keys[i]] != null && String(row[keys[i]]).trim() !== '') return String(row[keys[i]]);
+  }
+  return '';
+}
+
+// Тот же ключ, что строит products.js: клиент по нему находит картинку аромата.
+function catalogKey_(row, index){
+  var explicit = catalogRowValue_(row, ['product_id','sku','id','артикул']);
+  if(explicit) return 'sku:' + normalizeIdentity_(explicit);
+  var brand = normalizeIdentity_(row.brand);
+  var name = normalizeIdentity_(row.name);
+  return (brand || name) ? ('name:' + brand + '|' + name) : ('row:' + (index + 1));
+}
+
+function catalogAvailable_(row, volumes){
+  var stockRaw = catalogRowValue_(row, ['stock_qty','qty','quantity','stock_count','остаток','количество']);
+  if(stockRaw !== '') return toInt_(stockRaw) > 0;
+  var status = normalizeIdentity_(catalogRowValue_(row, ['status','availability','available','in_stock','stock','наличие','статус']));
+  if(status){
+    var no = ['нет','не в наличии','sold','out','false','0','no'];
+    for(var i = 0; i < no.length; i++){ if(status.indexOf(no[i]) > -1) return false; }
+    var yes = ['в наличии','available','true','yes','1','stock'];
+    for(var j = 0; j < yes.length; j++){ if(status.indexOf(yes[j]) > -1) return true; }
+  }
+  return Object.keys(volumes).length > 0;
+}
+
+// Индекс каталога для сборки сетов: в колонке items владелец может писать
+// артикул, «Бренд Название» или просто название — всё три варианта ведут на одну строку.
+// При дублях побеждает первая строка каталога.
+function buildCatalogIndex_(){
+  var rows;
+  try{
+    rows = readRows_('catalog');
+  }catch(err){
+    return null;
+  }
+  var index = {};
+  function put(key, item){
+    if(key && !Object.prototype.hasOwnProperty.call(index, key)) index[key] = item;
+  }
+  rows.forEach(function(row, i){
+    var brand = str_(row.brand, 200);
+    var name = str_(row.name, 200);
+    if(!brand && !name) return;
+    var volumes = catalogVolumes_(row);
+    var item = {
+      key: catalogKey_(row, i),
+      brand: brand,
+      name: name,
+      volumes: volumes,
+      available: catalogAvailable_(row, volumes),
+      image_url: str_(row.image_url, 500)
+    };
+    var sku = catalogRowValue_(row, ['product_id','sku','id','артикул']);
+    if(sku) put(matchKey_(sku), item);
+    put(matchKey_(brand + ' ' + name), item);
+    put(matchKey_(name), item);
+  });
+  return index;
+}
+
+// Раскрывает состав сета в позиции каталога и считает по ним
+// каталожную сумму и наличие. Ненайденную строку отдаём как есть (found:false):
+// в карточке она просто покажется текстом, но автоцена по такому сету отключается.
+function resolveSetItems_(rawItems, volume, index){
+  var parts = splitList_(rawItems);
+  var items = [];
+  var catalogTotal = 0;
+  var priceable = parts.length > 0 && Boolean(volume);
+  var available = true;
+  parts.forEach(function(part){
+    var found = index ? index[matchKey_(part)] : null;
+    if(!found){
+      items.push({key:'', brand:'', name:str_(part, 200), price:0, available:true, found:false});
+      priceable = false;
+      return;
+    }
+    var price = volume ? toInt_(found.volumes[volume]) : 0;
+    if(!price) priceable = false;
+    else catalogTotal += price;
+    if(!found.available) available = false;
+    items.push({
+      key: found.key,
+      brand: found.brand,
+      name: found.name,
+      price: price,
+      available: found.available,
+      found: true
+    });
+  });
+  return {
+    items: items,
+    catalog_total: priceable ? catalogTotal : 0,
+    available: available
+  };
+}
+
+// Публично отдаём только активные сеты с set_id и положительной ценой.
+// Цену считает сервер: из колонки price либо из каталога с учётом discount_percent.
+// Лист необязателен: пока SETS_SHEET_GID не задан, возвращаем пустой список,
+// и раздел на сайте просто не показывается.
+function readActiveSets_(){
+  var rows;
+  try{
+    rows = readRowsFromSheet_(getSetsSheet_());
+  }catch(err){
+    return [];
+  }
+  var active = rows.filter(function(row){
+    return str_(row.set_id, 60) && rowActive_(row.active);
+  });
+  if(!active.length) return [];
+
+  var index = buildCatalogIndex_();
+  var sets = [];
+  active.forEach(function(row){
+    var volume = str_(row.volume, 20);
+    var resolved = resolveSetItems_(row.items, volume, index);
+    var listPrice = toInt_(row.price);
+    var discount = Math.max(0, Math.min(90, toInt_(row.discount_percent)));
+    var price = listPrice;
+    if(!price && resolved.catalog_total){
+      price = discount
+        ? Math.round(resolved.catalog_total * (100 - discount) / 100)
+        : resolved.catalog_total;
+    }
+    if(price <= 0) return;
+
+    var oldPrice = toInt_(row.old_price);
+    if(!oldPrice && resolved.catalog_total > price) oldPrice = resolved.catalog_total;
+    var stock = setStock_(row.stock_qty);
+
+    sets.push({
+      set_id: str_(row.set_id, 60),
+      name: str_(row.name, 200),
+      name_kk: str_(row.name_kk, 200),
+      description: str_(row.description, 600),
+      description_kk: str_(row.description_kk, 600),
+      items: resolved.items,
+      volume: volume,
+      count: toInt_(row.count) || resolved.items.length,
+      price: price,
+      old_price: oldPrice,
+      catalog_total: resolved.catalog_total,
+      badge: str_(row.badge, 60),
+      badge_kk: str_(row.badge_kk, 60),
+      image_url: str_(row.image_url, 500),
+      tags: str_(row.tags, 200),
+      stock_qty: stock,
+      // Сет недоступен, если распродан сам или закончился любой аромат из состава.
+      available: (stock === '' || stock > 0) && resolved.available,
+      sort: toInt_(row.sort)
+    });
+  });
+  return sets;
+}
+
+// Админке отдаём лист как есть — вместе с выключенными сетами и без
+// подстановки каталога: она редактирует именно ячейки таблицы.
+function readSetsAdmin_(){
+  var sheet;
+  try{
+    sheet = getSetsSheet_();
+  }catch(err){
+    return {ok:true, configured:false, rows:[]};
+  }
+  return {ok:true, configured:true, rows:readRowsFromSheet_(sheet)};
+}
+
+function setCellValue_(field, value){
+  var raw = String(value == null ? '' : value).trim();
+  if(SET_NUMERIC_FIELDS.indexOf(field) === -1) return raw.slice(0, 800);
+  return raw === '' ? '' : toInt_(raw);
+}
+
+// Создаёт или обновляет строку сета по set_id. Доступно менеджеру и владельцу.
+function handleUpsertSet_(body, role){
+  var setId = str_(body.set_id, 60);
+  var raw = body.sheet_set || {};
+  if(!setId) return {ok:false, error:'set_id_required'};
+  if(!str_(raw.name, 200)) return {ok:false, error:'name_required'};
+
+  var sheet;
+  try{
+    sheet = getSetsSheet_();
+  }catch(err){
+    return {ok:false, error:'sets_sheet_not_configured'};
+  }
+
+  // На запись пропускаем только известные колонки — лишние поля из тела игнорируем.
+  var data = {};
+  SET_HEADERS.forEach(function(header){
+    if(Object.prototype.hasOwnProperty.call(raw, header)) data[header] = setCellValue_(header, raw[header]);
+  });
+  data.set_id = setId;
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try{
+    var values = sheet.getDataRange().getValues();
+    var headers = values.length ? values[0].map(normalizeHeader_) : [];
+    var idCol = headers.indexOf('set_id');
+    var rowIndex = -1;
+    if(idCol > -1){
+      for(var i = 1; i < values.length; i++){
+        if(normalizeIdentity_(values[i][idCol]) === normalizeIdentity_(setId)){
+          rowIndex = i;
+          break;
+        }
+      }
+    }
+
+    // Лист мог быть создан по старой версии инструкции — тогда часть колонок
+    // в нём отсутствует. Молча терять значения нельзя, поэтому возвращаем список.
+    var skipped = headers.length
+      ? Object.keys(data).filter(function(key){ return headers.indexOf(normalizeHeader_(key)) === -1; })
+      : [];
+
+    if(rowIndex === -1){
+      appendRowByHeaders_(sheet, data, SET_HEADERS);
+      logChange_(role, 'set_create', setId, data.name || '');
+      return {ok:true, created:true, skipped:skipped};
+    }
+
+    Object.keys(data).forEach(function(key){
+      var col = headers.indexOf(normalizeHeader_(key));
+      if(col === -1) return;
+      sheet.getRange(rowIndex + 1, col + 1).setValue(data[key]);
+    });
+    logChange_(role, 'set_update', setId, data.name || '');
+    return {ok:true, updated:true, skipped:skipped};
+  }finally{
+    lock.releaseLock();
+  }
+}
+
 /* ── Промокоды и сертификаты ────────────────────────────────────────────── */
 
 function getPromoSheet_(){
@@ -387,11 +717,16 @@ function getPromoSheet_(){
   throw new Error('promo sheet not found by gid ' + gid);
 }
 
-function promoActive_(value){
-  // Пусто = активен. Явные «нет/0/false/no/off» — выключено.
+// Признак активности строки листа: пусто = активна,
+// явные «нет/0/false/no/off» — выключена. Общий для промокодов и сетов.
+function rowActive_(value){
   var raw = normalizeIdentity_(value);
   if(raw === '') return true;
   return ['false','0','no','нет','off','неактивен','disabled'].indexOf(raw) === -1;
+}
+
+function promoActive_(value){
+  return rowActive_(value);
 }
 
 // Оценивает промокод для конкретной суммы БЕЗ списания использования.
@@ -1146,6 +1481,8 @@ function sanitizeItems_(items){
       brand: str_(item.brand, 200),
       description: str_(item.description, 400),
       type: str_(item.type, 20) || 'product',
+      // ref — ключ позиции в своём справочнике (сейчас: set_id готового сета).
+      ref: str_(item.ref, 60),
       quantity: quantity,
       price: price,
       total: price * quantity

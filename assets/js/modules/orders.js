@@ -136,6 +136,7 @@
         brand:item.brand || '',
         description:item.description || '',
         type:item.type || 'product',
+        ref:item.ref || '',
         quantity:Number(item.quantity || 1),
         price:Number(item.price || 0),
         total:Number(item.total || 0)
@@ -222,6 +223,8 @@
         brand:item.brand,
         description:item.description,
         type:item.type || 'product',
+        // ref — ключ позиции в справочнике (set_id готового сета): сервер сверяет по нему цену.
+        ref:item.ref || '',
         quantity:item.quantity,
         price:item.price,
         total:item.price * item.quantity

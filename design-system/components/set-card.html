@@ -1,0 +1,149 @@
+<!-- @dsCard group="Компоненты" name="Карточка готового сета" subtitle="Своя картинка, полка из каталога, «распродан»" width="720" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>La Belle — карточка готового сета</title>
+<style>
+:root{
+  --bg:#EBECE9; --fg:#21252B; --muted:#8A8E93; --ink-2:#3E4046; --ink-3:#4C525A;
+  --line:#E4E5E3; --line-strong:#CFD1CF; --card:#F6F7F5; --surface:#ffffff;
+  --accent:#21252B; --accent-ink:#EBECE9; --accent-hover:#2F343B;
+  --tile-a:#EDEEEC; --tile-b:#DCDDDB; --glass:rgba(255,255,255,.85);
+  --tag-danger-bg:rgba(42,36,31,.7); --tag-danger-ink:#ffffff;
+  --shadow-card:0 14px 30px -26px rgba(28,22,17,.5);
+  --shadow-card-hover:0 22px 40px -26px rgba(28,22,17,.55);
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Jost',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.55;padding:24px;
+}
+img{max-width:100%;display:block}
+
+/* стили из styles.css */
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;max-width:660px}
+.set-card{
+  display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;
+  background:var(--card);box-shadow:var(--shadow-card);overflow:hidden;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.set-card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-card-hover)}
+.set-card.is-unavailable{opacity:.68}
+.set-card-image{
+  position:relative;aspect-ratio:4/3;display:grid;place-items:center;
+  background:radial-gradient(120% 120% at 50% 0%,var(--tile-a) 0%,var(--tile-b) 100%);
+  border-bottom:1px solid var(--line);
+}
+.set-card-fallback{font-size:46px;color:var(--muted)}
+.set-card-shelf{display:flex;align-items:flex-end;justify-content:center;gap:10px;width:100%;height:100%;padding:14px 16px}
+.set-card-shelf img{width:auto;height:100%;max-width:30%;object-fit:contain}
+.set-card-badge,.set-card-saving{
+  position:absolute;top:10px;display:inline-flex;align-items:center;min-height:24px;
+  padding:4px 10px;border-radius:999px;font-size:12px;letter-spacing:.02em;
+}
+.set-card-badge{left:10px;background:var(--accent);color:var(--accent-ink)}
+.set-card-saving{right:10px;background:var(--glass);border:1px solid var(--line);color:var(--fg)}
+.set-card-body{display:flex;flex-direction:column;gap:10px;padding:14px;flex:1}
+.set-card-name{font-family:var(--serif);font-weight:600;font-size:22px;line-height:1.08}
+.set-card-desc{color:var(--ink-3);font-size:14px;line-height:1.55}
+.set-card-composition{display:grid;gap:4px}
+.set-card-composition-title{color:var(--muted);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.set-card-list{margin:0;padding-left:18px;color:var(--ink-2);font-size:14px;line-height:1.5}
+.set-card-list li.is-out{color:var(--muted);text-decoration:line-through}
+.set-card-item-note{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.set-card-tags{display:flex;flex-wrap:wrap;gap:6px}
+.set-card-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-top:auto;padding-top:4px;
+}
+.set-card-price{display:flex;align-items:baseline;gap:8px}
+.set-card-price-now{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1}
+.set-card-price-old{color:var(--muted);font-size:14px;text-decoration:line-through}
+.set-card--compact .set-card-name{font-size:19px}
+.tag{
+  display:inline-flex;align-items:center;min-height:24px;padding:4px 10px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink-3);font-size:12px;
+}
+.tag--danger{color:var(--tag-danger-ink);background:var(--tag-danger-bg);border-color:transparent}
+.add-to-cart{
+  width:100%;min-height:48px;border:0;border-radius:3px;background:var(--accent);color:var(--accent-ink);
+  padding:14px 16px;cursor:pointer;font-weight:500;font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+}
+.add-to-cart:hover{background:var(--accent-hover)}
+.add-to-cart:disabled{cursor:not-allowed;opacity:.42}
+.set-card-add{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:auto;min-height:42px;margin:0;padding:0 18px;white-space:nowrap;
+}
+</style>
+</head>
+<body>
+  <div class="sets-grid">
+    <article class="set-card">
+      <div class="set-card-image">
+        <div class="set-card-fallback">🎁</div>
+        <span class="set-card-badge">Хит</span>
+        <span class="set-card-saving">−2 500 ₸</span>
+      </div>
+      <div class="set-card-body">
+        <h3 class="set-card-name">Вечерний сет</h3>
+        <p class="set-card-desc">Три плотных вечерних аромата: табак, ваниль и кофе.</p>
+        <div class="set-card-composition">
+          <span class="set-card-composition-title">Состав</span>
+          <ul class="set-card-list">
+            <li>Tom Ford Tobacco Vanille</li>
+            <li>YSL Black Opium</li>
+            <li>Mancera Red Tobacco</li>
+          </ul>
+        </div>
+        <div class="set-card-tags">
+          <span class="tag">3 × 5мл</span>
+          <span class="tag">Вечер</span>
+          <span class="tag">Унисекс</span>
+        </div>
+        <div class="set-card-footer">
+          <div class="set-card-price">
+            <span class="set-card-price-old">14 500 ₸</span>
+            <span class="set-card-price-now">12 000 ₸</span>
+          </div>
+          <button class="add-to-cart set-card-add" type="button">В корзину</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="set-card is-unavailable">
+      <div class="set-card-image">
+        <div class="set-card-shelf" aria-hidden="true">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'%3E%3Crect x='22' y='2' width='16' height='14' rx='3' fill='%23AAB6BF'/%3E%3Crect x='8' y='16' width='44' height='80' rx='9' fill='%23CFD1CF'/%3E%3C/svg%3E" alt=""><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'%3E%3Crect x='22' y='2' width='16' height='14' rx='3' fill='%23AAB6BF'/%3E%3Crect x='8' y='16' width='44' height='80' rx='9' fill='%23CFD1CF'/%3E%3C/svg%3E" alt=""><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'%3E%3Crect x='22' y='2' width='16' height='14' rx='3' fill='%23AAB6BF'/%3E%3Crect x='8' y='16' width='44' height='80' rx='9' fill='%23CFD1CF'/%3E%3C/svg%3E" alt="">
+        </div>
+        <span class="set-card-badge">Новинка</span>
+      </div>
+      <div class="set-card-body">
+        <h3 class="set-card-name">Летний сет</h3>
+        <p class="set-card-desc">Цитрус и морская свежесть для жаркого дня.</p>
+        <div class="set-card-composition">
+          <span class="set-card-composition-title">Состав</span>
+          <ul class="set-card-list">
+            <li>Dior Sauvage</li>
+            <li>Versace Eros</li>
+            <li class="is-out">Bleu de Chanel <span class="set-card-item-note">Не в наличии</span></li>
+          </ul>
+        </div>
+        <div class="set-card-tags">
+          <span class="tag tag--danger">Распродан</span>
+          <span class="tag">3 × 2мл</span>
+          <span class="tag">Лето</span>
+        </div>
+        <div class="set-card-footer">
+          <div class="set-card-price">
+            <span class="set-card-price-now">9 800 ₸</span>
+          </div>
+          <button class="add-to-cart set-card-add" type="button" disabled>Распродан</button>
+        </div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

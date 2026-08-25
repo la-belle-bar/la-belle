@@ -52,6 +52,7 @@
       <div class="admin-tabs" role="tablist" aria-label="Разделы админки" data-i18n-aria-label="admin.sections">
         <button class="admin-tab is-active" type="button" data-admin-tab="orders" data-i18n="admin.orders">Заказы</button>
         <button class="admin-tab" type="button" data-admin-tab="products" data-i18n="admin.products">Товары</button>
+        <button class="admin-tab" type="button" data-admin-tab="sets" data-i18n="admin.sets">Сеты</button>
         <button class="admin-tab" type="button" data-admin-tab="reviews" data-i18n="admin.reviews">Отзывы</button>
         <button class="admin-tab" type="button" data-admin-tab="customers" data-i18n="admin.customers">Клиенты</button>
         <button class="admin-tab is-hidden" type="button" data-admin-tab="analytics" data-i18n="admin.analytics">Аналитика</button>
@@ -139,6 +140,37 @@
             </thead>
             <tbody id="productsTableBody">
               <tr><td colspan="8" data-i18n="admin.noProducts">Товары не найдены</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel is-hidden" id="setsPanel">
+        <div class="admin-toolbar admin-toolbar--simple">
+          <div class="admin-muted" data-i18n="admin.setsHint">Сеты собираются из позиций каталога: цена и наличие считаются по нему.</div>
+          <div class="admin-inline-actions">
+            <button class="btn-secondary" id="refreshSetsBtn" type="button" data-i18n="admin.refresh">Обновить</button>
+            <button class="btn-primary" id="createSetBtn" type="button" data-i18n="admin.createSet">Создать сет</button>
+          </div>
+        </div>
+
+        <div class="admin-notice" id="adminSetNotice"></div>
+
+        <div class="admin-table-wrap">
+          <table class="orders-table admin-sets-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.setName">Сет</th>
+                <th data-i18n="readySets.composition">Состав</th>
+                <th data-i18n="filters.volume">Объем</th>
+                <th data-i18n="admin.setPrice">Цена</th>
+                <th data-i18n="admin.stock">Остаток</th>
+                <th data-i18n="admin.status">Статус</th>
+                <th data-i18n="admin.actions">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="setsTableBody">
+              <tr><td colspan="7" data-i18n="admin.noSets">Сеты не найдены</td></tr>
             </tbody>
           </table>
         </div>
@@ -357,6 +389,126 @@
         <div class="admin-editor-actions">
           <button class="btn-secondary" id="resetProductOverrideBtn" type="button" data-i18n="admin.resetLocal">Сбросить локальные правки</button>
           <button class="btn-secondary" id="cancelProductEditBtn" type="button" data-i18n="admin.cancel">Отмена</button>
+          <button class="btn-primary" type="submit" data-i18n="admin.save">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="setEditorModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="setEditorTitle">
+    <div class="modal-content admin-editor-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="setEditorTitle" data-i18n="admin.setEditor">Редактирование сета</h2>
+        <button class="close" id="closeSetEditorBtn" type="button" aria-label="Закрыть" data-i18n-aria-label="common.close">&times;</button>
+      </div>
+      <form class="modal-body admin-product-form" id="setEditorForm">
+        <input type="hidden" id="editSetId" />
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.basic">Основное</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="admin.setCode">Код сета</span>
+              <input data-set-field="set_id" id="setFieldCode" autocomplete="off" spellcheck="false" placeholder="SET-NIGHT" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setName">Название</span>
+              <input data-set-field="name" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setNameKk">Название (KZ)</span>
+              <input data-set-field="name_kk" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setVolume">Объем флакона, мл</span>
+              <select data-set-field="volume" id="setFieldVolume"></select>
+            </label>
+          </div>
+          <div class="admin-form-grid admin-form-grid--wide">
+            <label class="field">
+              <span data-i18n="admin.setDescription">Описание</span>
+              <textarea data-set-field="description" rows="2" spellcheck="false"></textarea>
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setDescriptionKk">Описание (KZ)</span>
+              <textarea data-set-field="description_kk" rows="2" spellcheck="false"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.setComposition">Состав из каталога</h3>
+          <div class="set-picker-chips" id="setPickerChips"></div>
+          <label class="field">
+            <span data-i18n="admin.search">Поиск</span>
+            <input id="setPickerSearch" type="search" autocomplete="off" data-i18n-placeholder="admin.searchProductsPlaceholder" placeholder="Бренд, название, ноты" />
+          </label>
+          <div class="set-picker-list" id="setPickerList"></div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.setPricing">Цена</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="admin.setPriceManual">Цена, ₸</span>
+              <input data-set-field="price" id="setFieldPrice" type="number" min="0" step="100" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setDiscount">Скидка, %</span>
+              <input data-set-field="discount_percent" id="setFieldDiscount" type="number" min="0" max="90" step="1" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setOldPrice">Старая цена, ₸</span>
+              <input data-set-field="old_price" type="number" min="0" step="100" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setCount">Флаконов</span>
+              <input data-set-field="count" type="number" min="0" step="1" />
+            </label>
+          </div>
+          <div class="admin-notice" id="setPricePreview"></div>
+          <div class="admin-muted" data-i18n="admin.setPriceHint">Оставьте цену пустой — она посчитается по каталогу с учётом скидки.</div>
+        </section>
+
+        <section class="admin-form-section">
+          <h3 data-i18n="admin.setDisplay">Витрина</h3>
+          <div class="admin-form-grid">
+            <label class="field">
+              <span data-i18n="admin.setBadge">Плашка</span>
+              <input data-set-field="badge" data-i18n-placeholder="admin.setBadgePlaceholder" placeholder="Хит" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setBadgeKk">Плашка (KZ)</span>
+              <input data-set-field="badge_kk" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setTags">Теги</span>
+              <input data-set-field="tags" data-i18n-placeholder="admin.setTagsPlaceholder" placeholder="Вечер, Унисекс" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.stock">Остаток</span>
+              <input data-set-field="stock_qty" type="number" min="0" step="1" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.setSort">Порядок</span>
+              <input data-set-field="sort" type="number" min="0" step="1" />
+            </label>
+            <label class="field">
+              <span data-i18n="admin.status">Статус</span>
+              <select data-set-field="active" id="setFieldActive">
+                <option value="" data-i18n="admin.setShown">Показывать</option>
+                <option value="нет" data-i18n="admin.setHidden">Скрыт</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span data-i18n="admin.imageUrl">image_url</span>
+            <input data-set-field="image_url" />
+          </label>
+        </section>
+
+        <div class="admin-editor-actions">
+          <button class="btn-secondary" id="cancelSetEditBtn" type="button" data-i18n="admin.cancel">Отмена</button>
           <button class="btn-primary" type="submit" data-i18n="admin.save">Сохранить</button>
         </div>
       </form>

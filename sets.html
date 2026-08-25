@@ -6,12 +6,12 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'self'; object-src 'none'; form-action 'self'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="theme-color" content="#EBECE9" />
-  <title>La Belle - сеты</title>
+  <title>La Belle — готовые сеты</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
   <!-- Тема выставляется до первой отрисовки, поэтому в <head> и без defer -->
   <script src="assets/js/theme.js"></script>
 </head>
-<body data-page="custom-set">
+<body data-page="sets">
   <header class="site-header">
     <div class="container header-content">
       <button class="burger-btn" id="burgerBtn" type="button" aria-label="Открыть меню" aria-controls="siteNav" aria-expanded="false" data-i18n-aria-label="nav.openMenu">
@@ -52,93 +52,31 @@
     <section class="set-hero">
       <div class="container set-hero-inner">
         <div>
-          <p class="eyebrow" data-i18n="sets.eyebrow">Персональный сет</p>
-          <h1 data-i18n="sets.title">Соберите набор ароматов</h1>
-          <p data-i18n="sets.copy">Выберите ароматы, объем и количество флаконов. Цена пересчитается автоматически.</p>
+          <p class="eyebrow" data-i18n="readySets.eyebrow">Готовые сеты</p>
+          <h1 data-i18n="readySets.title">Собранные подборки</h1>
+          <p data-i18n="readySets.copy">Готовые наборы ароматов по темам и поводам — цена сета уже со скидкой к поштучной покупке.</p>
         </div>
         <div class="set-hero-actions">
-          <a class="btn-secondary" href="sets.html" data-i18n="readySets.toReady">Готовые сеты →</a>
+          <a class="btn-secondary" href="custom-set.html" data-i18n="readySets.toBuilder">Собрать свой сет →</a>
           <a class="btn-secondary" href="index.html#catalog" data-i18n="sets.backToCatalog">Вернуться в каталог</a>
         </div>
       </div>
     </section>
 
-    <section class="container set-builder" aria-label="Создание сета" data-i18n-aria-label="sets.aria">
-      <div class="set-toolbar">
-        <label class="field field--search">
-          <span data-i18n="filters.search">Поиск</span>
-          <input id="customSetSearch" type="search" data-i18n-placeholder="filters.searchPlaceholder" placeholder="Название, бренд, ноты" autocomplete="off" />
-        </label>
-        <label class="field" id="setBrandFilterField">
-          <span data-i18n="filters.brand">Бренд</span>
-          <select id="customSetBrandFilter">
-            <option value="" data-i18n="filters.allBrands">Все бренды</option>
-          </select>
-        </label>
-        <label class="field is-hidden" id="setCategoryFilterField">
-          <span data-i18n="filters.category">Категория</span>
-          <select id="customSetCategoryFilter">
-            <option value="" data-i18n="filters.allCategories">Все категории</option>
-          </select>
-        </label>
-        <label class="field is-hidden" id="setSeasonFilterField">
-          <span data-i18n="filters.season">Сезон</span>
-          <select id="customSetSeasonFilter">
-            <option value="" data-i18n="filters.allSeasons">Все сезоны</option>
-          </select>
-        </label>
-        <label class="field is-hidden" id="setGenderFilterField">
-          <span data-i18n="filters.gender">Пол</span>
-          <select id="customSetGenderFilter">
-            <option value="" data-i18n="filters.allGenders">Любой</option>
-          </select>
-        </label>
-        <label class="field is-hidden" id="setOccasionFilterField">
-          <span data-i18n="filters.occasion">Повод</span>
-          <select id="customSetOccasionFilter">
-            <option value="" data-i18n="filters.allOccasions">Любой повод</option>
-          </select>
-        </label>
-        <label class="field">
-          <span data-i18n="filters.volume">Объем</span>
-          <select id="customSetVolume"></select>
-        </label>
-        <label class="field">
-          <span data-i18n="sets.count">Количество</span>
-          <input class="custom-set-count" type="number" id="customSetCount" min="2" max="10" value="3" />
-        </label>
-      </div>
-
-      <div class="set-layout">
+    <section class="container ready-sets-section" id="ready-sets" aria-label="Готовые сеты" data-i18n-aria-label="readySets.aria">
+      <div class="section-heading section-heading--compact">
         <div>
-          <div class="section-heading section-heading--compact">
-            <div>
-              <p class="eyebrow" data-i18n="sets.choice">Выбор</p>
-              <h2 data-i18n="sets.productsTitle">Ароматы для сета</h2>
-            </div>
-            <div class="catalog-count" id="setCatalogCount" data-i18n="catalog.loading">Загрузка...</div>
-          </div>
-          <div class="custom-set-grid custom-set-grid--page" id="customSetGrid">
-            <div class="skeleton-grid">
-              <div></div><div></div><div></div>
-            </div>
-          </div>
-          <nav class="pagination" id="setPagination" aria-label="Страницы ароматов" data-i18n-aria-label="pagination.set"></nav>
+          <p class="eyebrow" data-i18n="readySets.choose">Выбор</p>
+          <h2 data-i18n="readySets.allTitle">Все сеты</h2>
         </div>
-
-        <aside class="set-summary" aria-label="Итог сета" data-i18n-aria-label="sets.summary">
-          <div>
-            <p class="eyebrow" data-i18n="sets.summaryEyebrow">Итог</p>
-            <h2 data-i18n="sets.yourSet">Ваш сет</h2>
-          </div>
-          <div class="selected-list" id="customSetSelected">
-            <div class="empty-state empty-state--compact" data-i18n="sets.empty">Выберите ароматы</div>
-          </div>
-          <div class="current-price" id="customSetPrice" aria-live="polite"></div>
-          <button class="add-to-cart" id="addCustomSetBtn" type="button" disabled data-i18n="cart.add">Добавить в корзину</button>
-          <button class="btn-secondary" id="clearCustomSetBtn" type="button" data-i18n="sets.clear">Очистить выбор</button>
-        </aside>
+        <div class="catalog-count" id="readySetsCount" data-i18n="catalog.loading">Загрузка...</div>
       </div>
+      <div class="sets-grid" id="readySetsGrid">
+        <div class="skeleton-grid">
+          <div></div><div></div><div></div>
+        </div>
+      </div>
+      <a class="ready-sets-hint" href="custom-set.html" data-i18n="readySets.buildOwn">Не нашли подходящий? Соберите свой сет.</a>
     </section>
   </main>
 
@@ -280,6 +218,7 @@
   <script src="assets/js/modules/api.js" defer></script>
   <script src="assets/js/modules/kz-cities.js" defer></script>
   <script src="assets/js/modules/products.js" defer></script>
+  <script src="assets/js/modules/ready-sets.js" defer></script>
   <script src="assets/js/modules/promo.js" defer></script>
   <script src="assets/js/modules/loyalty.js" defer></script>
   <script src="assets/js/modules/cart.js" defer></script>
