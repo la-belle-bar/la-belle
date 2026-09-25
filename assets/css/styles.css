@@ -2432,25 +2432,27 @@ body{transition:background-color .2s ease,color .2s ease}
   align-items: center;
   justify-content: space-between;
 }
-
+/* Явный вывод полноценной поисковой строки */
 .header-search {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 20px;
   padding: 4px 12px;
-  margin-left: auto;
-  margin-right: 15px;
+  margin-left: 20px;
+  position: relative;
+  z-index: 10;
 }
 
 .header-search input {
+  display: block !important;
   background: transparent;
   border: none;
   outline: none;
   color: #ffffff;
   font-size: 14px;
-  width: 140px;
+  width: 160px;
 }
 
 .header-search input::placeholder {
@@ -2464,7 +2466,7 @@ body{transition:background-color .2s ease,color .2s ease}
   color: #ffffff;
   display: flex;
   align-items: center;
-  padding: 4px;
+  padding: 2px;
 }
 
 .header-search button:hover {
