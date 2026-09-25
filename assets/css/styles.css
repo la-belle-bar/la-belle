@@ -1615,7 +1615,7 @@ footer{
   .cart-btn span:first-child{display:none}
   .hero-inner{
     min-height:auto;
-    grid-template-columns:1fr;
+    grid-template-columns:1fr;     
     gap:18px;
   }
   .hero-shelf{
@@ -2426,3 +2426,37 @@ body{transition:background-color .2s ease,color .2s ease}
 .hero-slide img,.hero-shelf img{filter:var(--img-filter)}
 .product-image img,.detail-image img,.custom-item-image img,.similar-card-image img,
 .set-card-image img{filter:var(--photo-filter)}
+/* Выравнивание и сдвиг поиска вправо */
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  background: #f1f3f4;
+  border-radius: 24px;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+}
+
+.header-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 6px 8px;
+  font-size: 14px;
+  width: 200px;
+}
+
+.header-search button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #5f6368;
+}
