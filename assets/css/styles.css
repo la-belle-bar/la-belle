@@ -2436,27 +2436,37 @@ body{transition:background-color .2s ease,color .2s ease}
 .header-search {
   display: flex;
   align-items: center;
-  margin-left: auto;
-  background: #f1f3f4;
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
   padding: 4px 12px;
-  border: 1px solid transparent;
+  margin-left: auto;
+  margin-right: 15px;
 }
 
 .header-search input {
-  border: none;
   background: transparent;
+  border: none;
   outline: none;
-  padding: 6px 8px;
+  color: #ffffff;
   font-size: 14px;
-  width: 200px;
+  width: 140px;
+}
+
+.header-search input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .header-search button {
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  color: #5f6368;
+  padding: 4px;
+}
+
+.header-search button:hover {
+  opacity: 0.8;
 }
